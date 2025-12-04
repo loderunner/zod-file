@@ -5,74 +5,309 @@ import { ZodError, z } from 'zod';
 import { ZodJSONError } from './errors';
 
 /**
- * A migration step from version V to V+1.
- * TFrom is the data type at version V, TTo is the data type at version V+1.
+ * A migration step that transforms data from one schema version to the next.
+ *
+ * Migration steps form a sequential chain, where each step transforms data
+ * from version `V` to version `V+1`. The `schema` validates the input data
+ * before the `migrate` function transforms it.
+ *
+ * @typeParam V - The source version number (data will be migrated to V+1)
+ * @typeParam TFrom - The data type at version V
+ * @typeParam TTo - The data type at version V+1
+ *
+ * @example
+ * ```typescript
+ * import { z } from 'zod';
+ * import type { MigrationStep } from 'zod-store';
+ *
+ * const SettingsV1 = z.object({ theme: z.string() });
+ * type SettingsV1 = z.infer<typeof SettingsV1>;
+ *
+ * const SettingsV2 = z.object({
+ *   theme: z.enum(['light', 'dark']),
+ *   fontSize: z.number(),
+ * });
+ * type SettingsV2 = z.infer<typeof SettingsV2>;
+ *
+ * const migrationV1toV2: MigrationStep<1, SettingsV1, SettingsV2> = {
+ *   version: 1,
+ *   schema: SettingsV1,
+ *   migrate: (v1) => ({
+ *     theme: v1.theme === 'dark' ? 'dark' : 'light',
+ *     fontSize: 14,
+ *   }),
+ * };
+ * ```
  */
 export type MigrationStep<V extends number, TFrom, TTo> = {
+  /**
+   * The version number this migration migrates from.
+   * Data at this version will be transformed to version `V+1`.
+   */
   version: V;
+
+  /**
+   * The Zod schema for validating input data at version V.
+   * Data is validated against this schema before the migrate function runs.
+   */
   schema: z.ZodType<TFrom>;
+
+  /**
+   * Transforms data from version V to version V+1.
+   * Can be synchronous or asynchronous.
+   *
+   * @param data - The validated data at version V
+   * @returns The transformed data for version V+1
+   */
   migrate: (data: TFrom) => TTo | Promise<TTo>;
 };
 
 /**
- * Options for createZodJSON.
- * V is the current version number as a literal type.
- * T is the current version's data type.
+ * Configuration options for creating a ZodJSON persistence instance.
  *
- * If migrations are provided, version must be defined.
- * If migrations are not provided, version can be undefined (and version field will be ignored in save/load).
+ * @typeParam V - The current schema version number (literal type)
+ * @typeParam T - The current schema's data type
+ *
+ * @example
+ * ```typescript
+ * // Without versioning
+ * const options: ZodJSONOptions<number, Settings> = {
+ *   schema: SettingsSchema,
+ *   default: { theme: 'light' },
+ * };
+ *
+ * // With versioning and migrations
+ * const options: ZodJSONOptions<2, SettingsV2> = {
+ *   version: 2 as const,
+ *   schema: SettingsSchemaV2,
+ *   default: { theme: 'light', fontSize: 14 },
+ *   migrations: [migrationV1toV2],
+ * };
+ * ```
  */
 export type ZodJSONOptions<
   V extends number,
   T extends Record<string, unknown>,
 > = {
+  /**
+   * The Zod object schema for validating data.
+   * Must be a `z.object()` schema that produces type T.
+   */
   schema: z.ZodObject<any, any> & z.ZodType<T>;
+
+  /**
+   * Default value or factory to use when the file is missing or invalid.
+   *
+   * If a function is provided, it is called each time a default is needed,
+   * allowing for dynamic defaults (e.g., including timestamps).
+   *
+   * When a default is configured and `throwOnError` is false (the default),
+   * load operations will return this value instead of throwing on errors.
+   */
   default?: T | (() => T);
+
+  /**
+   * The current schema version number.
+   *
+   * Required when migrations are provided. When set, files include a
+   * `_version` field that is used to determine which migrations to apply.
+   */
   version?: V;
+
+  /**
+   * Array of migration steps to upgrade data from older versions.
+   *
+   * Migrations must form a sequential chain starting from version 1
+   * and ending at `version - 1`. Each migration transforms data from
+   * version V to version V+1.
+   */
   migrations?: MigrationStep<number, unknown, unknown>[];
 };
 
-export type LoadOptions = {
-  /** If true, throw even if a default is configured */
-  throwOnError?: boolean;
-};
-
-export type SaveOptions = {
-  /** If true, save without indentation */
-  compact?: boolean;
-};
-
-export type ZodJSON<T> = {
-  load(path: string, options?: LoadOptions): Promise<T>;
-  save(data: T, path: string, options?: SaveOptions): Promise<void>;
-};
-
 /**
- * Creates a ZodJSON persistence instance for versioned JSON files with Zod validation.
- *
- * @param options - Configuration options
- * @returns A persistence instance with typed load and save methods
+ * Options for the `load` method.
  *
  * @example
  * ```typescript
- * // Without version - version field is ignored in save/load
- * const SettingsSchema = z.object({ theme: z.string() });
- * const settings = createZodJSON({
+ * // Return default on error (default behavior)
+ * const data = await store.load('./config.json');
+ *
+ * // Always throw on error, even with default configured
+ * const data = await store.load('./config.json', { throwOnError: true });
+ * ```
+ */
+export type LoadOptions = {
+  /**
+   * If true, throw errors even when a default value is configured.
+   *
+   * By default, when a default is configured, load operations return
+   * the default value on errors (file missing, invalid JSON, validation
+   * failure, etc.). Set this to true to throw instead.
+   *
+   * @defaultValue false
+   */
+  throwOnError?: boolean;
+};
+
+/**
+ * Options for the `save` method.
+ *
+ * @example
+ * ```typescript
+ * // Pretty-printed JSON (default)
+ * await store.save(data, './config.json');
+ *
+ * // Compact JSON without indentation
+ * await store.save(data, './config.json', { compact: true });
+ * ```
+ */
+export type SaveOptions = {
+  /**
+   * If true, save JSON without indentation for smaller file size.
+   *
+   * @defaultValue false
+   */
+  compact?: boolean;
+};
+
+/**
+ * A persistence instance for type-safe JSON file operations.
+ *
+ * Created by {@link createZodJSON}. Provides methods to load and save
+ * JSON data with Zod validation and optional schema migrations.
+ *
+ * @typeParam T - The data type managed by this instance
+ *
+ * @example
+ * ```typescript
+ * import { createZodJSON, type ZodJSON } from 'zod-store';
+ *
+ * const store: ZodJSON<Settings> = createZodJSON({
  *   schema: SettingsSchema,
  *   default: { theme: 'light' },
  * });
  *
- * // With migrations - version must be explicitly provided
- * const settingsV2 = createZodJSON({
+ * const data = await store.load('./settings.json');
+ * await store.save({ theme: 'dark' }, './settings.json');
+ * ```
+ */
+export type ZodJSON<T> = {
+  /**
+   * Loads and validates JSON data from a file.
+   *
+   * If the instance is configured with a version, applies any necessary
+   * migrations to upgrade older data to the current schema version.
+   *
+   * @param path - Path to the JSON file
+   * @param options - Load options
+   * @returns The validated data
+   * @throws {ZodJSONError} When loading fails and no default is configured, or when `throwOnError` is true
+   */
+  load(path: string, options?: LoadOptions): Promise<T>;
+
+  /**
+   * Saves data to a JSON file.
+   *
+   * If the instance is configured with a version, includes a `_version`
+   * field in the output. Uses the schema's `encodeAsync` for serialization,
+   * supporting custom transforms.
+   *
+   * @param data - The data to save (must match the schema)
+   * @param path - Path to the JSON file
+   * @param options - Save options
+   * @throws {ZodJSONError} When encoding or writing fails
+   */
+  save(data: T, path: string, options?: SaveOptions): Promise<void>;
+};
+
+/**
+ * Creates a ZodJSON persistence instance for type-safe JSON file operations.
+ *
+ * The returned instance provides `load` and `save` methods that handle:
+ * - Reading and writing JSON files
+ * - Validating data against a Zod schema
+ * - Applying sequential migrations for versioned schemas
+ * - Returning default values on errors (when configured)
+ *
+ * @typeParam V - The current schema version number
+ * @typeParam T - The data type produced by the schema
+ * @param options - Configuration options for the persistence instance
+ * @returns A {@link ZodJSON} instance with typed `load` and `save` methods
+ * @throws {Error} If the migration chain is invalid (non-sequential or incomplete)
+ *
+ * @example Basic usage without versioning
+ * ```typescript
+ * import { z } from 'zod';
+ * import { createZodJSON } from 'zod-store';
+ *
+ * const SettingsSchema = z.object({
+ *   theme: z.enum(['light', 'dark']),
+ *   fontSize: z.number(),
+ * });
+ *
+ * const settings = createZodJSON({
+ *   schema: SettingsSchema,
+ *   default: { theme: 'light', fontSize: 14 },
+ * });
+ *
+ * // Load returns default if file doesn't exist
+ * const data = await settings.load('./settings.json');
+ * console.log(data.theme); // 'light'
+ *
+ * // Save writes JSON to disk
+ * await settings.save({ theme: 'dark', fontSize: 16 }, './settings.json');
+ * ```
+ *
+ * @example Versioned schema with migrations
+ * ```typescript
+ * import { z } from 'zod';
+ * import { createZodJSON } from 'zod-store';
+ *
+ * // Historical schema (v1)
+ * const SettingsV1 = z.object({ theme: z.string() });
+ *
+ * // Current schema (v2)
+ * const SettingsV2 = z.object({
+ *   theme: z.enum(['light', 'dark']),
+ *   accentColor: z.string(),
+ * });
+ *
+ * const settings = createZodJSON({
  *   version: 2 as const,
- *   schema: SettingsSchemaV2,
+ *   schema: SettingsV2,
  *   migrations: [
- *     { version: 1, schema: SettingsSchemaV1, migrate: (v1) => ({ ...v1, newField: 'default' }) },
+ *     {
+ *       version: 1,
+ *       schema: SettingsV1,
+ *       migrate: (v1) => ({
+ *         theme: v1.theme === 'dark' ? 'dark' : 'light',
+ *         accentColor: '#0066cc',
+ *       }),
+ *     },
  *   ],
  * });
  *
- * const data = await settings.load('/path/to/settings.json');
- * await settings.save(data, '/path/to/settings.json');
+ * // Automatically migrates v1 files to v2 on load
+ * const data = await settings.load('./settings.json');
+ * ```
+ *
+ * @example Error handling
+ * ```typescript
+ * import { createZodJSON, ZodJSONError } from 'zod-store';
+ *
+ * const settings = createZodJSON({
+ *   schema: SettingsSchema,
+ *   default: { theme: 'light', fontSize: 14 },
+ * });
+ *
+ * try {
+ *   // throwOnError: true ignores the default and throws instead
+ *   const data = await settings.load('./settings.json', { throwOnError: true });
+ * } catch (error) {
+ *   if (error instanceof ZodJSONError) {
+ *     console.error(`Error [${error.code}]: ${error.message}`);
+ *   }
+ * }
  * ```
  */
 export function createZodJSON<

@@ -1,7 +1,7 @@
 /**
  * zod-store - Type-safe file persistence with Zod validation and schema migrations
  *
- * Supports JSON out of the box, and YAML with the optional `js-yaml` dependency.
+ * Supports JSON out of the box. For YAML support, import from `zod-store/yaml`.
  *
  * @packageDocumentation
  *
@@ -27,7 +27,7 @@
  * @example YAML persistence (requires js-yaml)
  * ```typescript
  * import { z } from 'zod';
- * import { createZodYAML } from 'zod-store';
+ * import { createZodYAML } from 'zod-store/yaml';
  *
  * const ConfigSchema = z.object({
  *   database: z.object({
@@ -51,21 +51,9 @@ export {
   type MigrationStep,
   type SaveOptions,
   type Serializer,
-  // Legacy aliases
-  type ZodJSON,
-  type ZodJSONOptions,
   type ZodStore,
   type ZodStoreOptions,
-  createZodJSON,
   createZodStore,
-  jsonSerializer,
 } from './persistence';
-
-export {
-  // Legacy aliases
-  type ZodYAML,
-  type ZodYAMLOptions,
-  createZodYAML,
-} from './yaml';
 
 export { type ErrorCode, ZodStoreError } from './errors';

@@ -22,24 +22,15 @@
  * ```
  */
 export type ErrorCode =
-  /** File could not be read from disk */
-  | 'FileRead'
-  /** File could not be written to disk */
-  | 'FileWrite'
-  /** File content is not valid (JSON, YAML, etc.) */
-  | 'InvalidFormat'
-  /** `_version` field is missing, not an integer, or ≤ 0 */
-  | 'InvalidVersion'
-  /** File version is greater than the current schema version */
-  | 'UnsupportedVersion'
-  /** Data does not match the Zod schema */
-  | 'Validation'
-  /** A migration function threw an error */
-  | 'Migration'
-  /** Schema encoding failed during save */
-  | 'Encoding'
-  /** An optional dependency (like js-yaml) is not installed */
-  | 'MissingDependency';
+  | 'FileRead' // File could not be read from disk
+  | 'FileWrite' // File could not be written to disk
+  | 'InvalidFormat' // File content is not valid (JSON, YAML, etc.)
+  | 'InvalidVersion' // `_version` field is missing, not an integer, or ≤ 0
+  | 'UnsupportedVersion' // File version is greater than the current schema version
+  | 'Validation' // Data does not match the Zod schema
+  | 'Migration' // A migration function threw an error
+  | 'Encoding' // Schema encoding failed during save
+  | 'MissingDependency'; // An optional dependency (like js-yaml) is not installed
 
 /**
  * Error thrown by ZodStore operations.
@@ -68,12 +59,7 @@ export class ZodStoreError extends Error {
   /**
    * Error code identifying the failure stage.
    */
-  code: ErrorCode;
-
-  /**
-   * The underlying error that caused this failure, if any.
-   */
-  cause?: Error;
+  readonly code: ErrorCode;
 
   /**
    * Creates a new ZodStoreError.
@@ -83,9 +69,8 @@ export class ZodStoreError extends Error {
    * @param cause - The underlying error that caused this failure
    */
   constructor(code: ErrorCode, message: string, cause?: Error) {
-    super(message);
+    super(message, { cause });
     this.name = 'ZodStoreError';
     this.code = code;
-    this.cause = cause;
   }
 }

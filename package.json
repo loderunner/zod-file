@@ -2,13 +2,33 @@
   "name": "zod-store",
   "version": "0.0.0",
   "description": "",
-  "main": "dist/index.js",
+  "type": "module",
+  "main": "dist/cjs/index.cjs",
+  "module": "dist/esm/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/cjs/index.cjs"
+    },
+    "./json": {
+      "types": "./dist/json.d.ts",
+      "import": "./dist/esm/json.mjs",
+      "require": "./dist/cjs/json.cjs"
+    },
+    "./yaml": {
+      "types": "./dist/yaml.d.ts",
+      "import": "./dist/esm/yaml.mjs",
+      "require": "./dist/cjs/yaml.cjs"
+    }
+  },
   "scripts": {
     "lint": "prettier --check . && eslint .",
     "lint:fix": "prettier --write . && eslint --fix .",
     "test": "vitest",
-    "build": "tsdown",
-    "watch": "tsdown --watch",
+    "build": "rolldown -c",
+    "watch": "rolldown --watch -c",
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run build"
   },
@@ -29,7 +49,8 @@
     "globals": "^16.5.0",
     "js-yaml": "^4.1.1",
     "prettier": "^3.7.4",
-    "tsdown": "0.17.0-beta.6",
+    "rolldown": "1.0.0-beta.53",
+    "rolldown-plugin-dts": "^0.18.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.1",
     "vitest": "^4.0.15"

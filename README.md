@@ -18,15 +18,15 @@ for Node.js.
 ## Installation
 
 ```bash
-pnpm add zod-store zod
+pnpm add zod-store
 ```
 
 ```bash
-npm install zod-store zod
+npm install zod-store
 ```
 
 ```bash
-yarn add zod-store zod
+yarn add zod-store
 ```
 
 ## Quick Start
@@ -81,23 +81,16 @@ A `ZodJSON<T>` object with:
 Loads JSON from a file, applies migrations if needed, and validates against the
 schema.
 
+If a default is configured and loading fails for any reason (file missing,
+invalid JSON, validation error, etc.), returns the default value instead of
+throwing. Use `throwOnError: true` to throw errors even when a default is
+configured.
+
 #### Options
 
 | Property       | Type      | Default | Description                                    |
 | -------------- | --------- | ------- | ---------------------------------------------- |
 | `throwOnError` | `boolean` | `false` | Throw errors even when a default is configured |
-
-#### Behavior
-
-1. Reads the file from disk
-2. Parses JSON content
-3. If versioned, extracts `_version` and applies migrations up to current
-   version
-4. Validates data against the current schema
-5. Returns the typed data
-
-If any step fails and a default is configured (and `throwOnError` is false),
-returns the default value instead of throwing.
 
 ### `save(data, path, options?)`
 
@@ -177,7 +170,7 @@ handling:
 import { ZodJSONError } from 'zod-store';
 
 try {
-  const data = await settings.load('./settings.json', { throwOnError: true });
+  const data = await settings.load('./settings.json');
 } catch (error) {
   if (error instanceof ZodJSONError) {
     switch (error.code) {
@@ -199,6 +192,29 @@ try {
       case 'Migration':
         console.error('Migration failed:', error.message);
         break;
+    }
+  }
+}
+```
+
+### Accessing the Underlying Error
+
+The `cause` property contains the original error that triggered the failure.
+This is useful for debugging or extracting detailed validation errors from Zod:
+
+```typescript
+import { ZodJSONError } from 'zod-store';
+import { ZodError } from 'zod';
+
+try {
+  const data = await settings.load('./settings.json');
+} catch (error) {
+  if (error instanceof ZodJSONError && error.code === 'Validation') {
+    if (error.cause instanceof ZodError) {
+      // Access Zod's detailed validation errors
+      for (const issue of error.cause.issues) {
+        console.error(`${issue.path.join('.')}: ${issue.message}`);
+      }
     }
   }
 }

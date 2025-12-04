@@ -22,25 +22,42 @@ const YAMLSerializer: Serializer = {
 } as const;
 
 /**
- * Creates a ZodStore persistence instance for versioned YAML files with Zod validation.
+ * Creates a ZodStore persistence instance for type-safe YAML file operations.
  *
  * Requires the `js-yaml` package to be installed as a peer dependency.
  *
- * @param options - Configuration options
- * @returns A persistence instance with typed load and save methods
+ * @typeParam V - The current schema version number
+ * @typeParam T - The data type produced by the schema
+ * @param options - Configuration options for the persistence instance
+ * @returns A {@link ZodStore} instance with typed `load` and `save` methods
+ * @throws {Error} If the migration chain is invalid (non-sequential or incomplete)
  *
- * @example
+ * @example Basic usage without versioning
  * ```typescript
+ * import { z } from 'zod';
  * import { createZodYAML } from 'zod-store/yaml';
  *
- * // Without version - version field is ignored in save/load
  * const SettingsSchema = z.object({ theme: z.string() });
  * const settings = createZodYAML({
  *   schema: SettingsSchema,
  *   default: { theme: 'light' },
  * });
  *
- * // With migrations - version must be explicitly provided
+ * const data = await settings.load('/path/to/settings.yaml');
+ * await settings.save(data, '/path/to/settings.yaml');
+ * ```
+ *
+ * @example Versioned schema with migrations
+ * ```typescript
+ * import { z } from 'zod';
+ * import { createZodYAML } from 'zod-store/yaml';
+ *
+ * const SettingsSchemaV1 = z.object({ theme: z.string() });
+ * const SettingsSchemaV2 = z.object({
+ *   theme: z.string(),
+ *   newField: z.string(),
+ * });
+ *
  * const settingsV2 = createZodYAML({
  *   version: 2 as const,
  *   schema: SettingsSchemaV2,
@@ -49,8 +66,7 @@ const YAMLSerializer: Serializer = {
  *   ],
  * });
  *
- * const data = await settings.load('/path/to/settings.yaml');
- * await settings.save(data, '/path/to/settings.yaml');
+ * const data = await settingsV2.load('/path/to/settings.yaml');
  * ```
  */
 export function createZodYAML<

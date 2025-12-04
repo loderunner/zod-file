@@ -1,14 +1,17 @@
 /**
  * zod-store - Type-safe file persistence with Zod validation and schema migrations
  *
- * Supports JSON out of the box. For YAML support, import from `zod-store/yaml`.
+ * This module exports core types and the generic {@link createZodStore} factory.
+ * For format-specific factories, use the subpath exports:
+ * - `zod-store/json` for JSON files
+ * - `zod-store/yaml` for YAML files (requires `js-yaml` peer dependency)
  *
  * @packageDocumentation
  *
  * @example JSON persistence
  * ```typescript
  * import { z } from 'zod';
- * import { createZodJSON } from 'zod-store';
+ * import { createZodJSON } from 'zod-store/json';
  *
  * const SettingsSchema = z.object({
  *   theme: z.enum(['light', 'dark']),

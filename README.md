@@ -44,7 +44,7 @@ pnpm add js-yaml
 
 ```typescript
 import { z } from 'zod';
-import { createZodJSON } from 'zod-store';
+import { createZodJSON } from 'zod-store/json';
 
 // Define your schema
 const SettingsSchema = z.object({
@@ -69,7 +69,7 @@ await settings.save({ theme: 'dark', fontSize: 16 }, './settings.json');
 
 ```typescript
 import { z } from 'zod';
-import { createZodYAML } from 'zod-store';
+import { createZodYAML } from 'zod-store/yaml';
 
 const ConfigSchema = z.object({
   database: z.object({
@@ -156,7 +156,7 @@ to handle backward compatibility.
 
 ```typescript
 import { z } from 'zod';
-import { createZodJSON } from 'zod-store';
+import { createZodJSON } from 'zod-store/json';
 
 // Version 1 schema (historical)
 const SettingsV1 = z.object({

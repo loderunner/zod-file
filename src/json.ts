@@ -39,7 +39,7 @@ export const jsonSerializer: Serializer = {
  * @example Basic usage without versioning
  * ```typescript
  * import { z } from 'zod';
- * import { createZodJSON } from 'zod-store';
+ * import { createZodJSON } from 'zod-store/json';
  *
  * const SettingsSchema = z.object({
  *   theme: z.enum(['light', 'dark']),
@@ -62,7 +62,7 @@ export const jsonSerializer: Serializer = {
  * @example Versioned schema with migrations
  * ```typescript
  * import { z } from 'zod';
- * import { createZodJSON } from 'zod-store';
+ * import { createZodJSON } from 'zod-store/json';
  *
  * // Historical schema (v1)
  * const SettingsV1 = z.object({ theme: z.string() });
@@ -94,7 +94,8 @@ export const jsonSerializer: Serializer = {
  *
  * @example Error handling
  * ```typescript
- * import { createZodJSON, ZodStoreError } from 'zod-store';
+ * import { ZodStoreError } from 'zod-store';
+ * import { createZodJSON } from 'zod-store/json';
  *
  * const settings = createZodJSON({
  *   schema: SettingsSchema,

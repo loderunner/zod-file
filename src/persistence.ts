@@ -173,14 +173,16 @@ export type SaveOptions = {
 /**
  * A persistence instance for type-safe file operations.
  *
- * Created by {@link createZodStore}, {@link createZodJSON}, or {@link createZodYAML}.
+ * Created by {@link createZodStore}, or the format-specific factories
+ * `createZodJSON` (from `zod-store/json`) and `createZodYAML` (from `zod-store/yaml`).
  * Provides methods to load and save data with Zod validation and optional schema migrations.
  *
  * @typeParam T - The data type managed by this instance
  *
  * @example
  * ```typescript
- * import { createZodJSON, type ZodStore } from 'zod-store';
+ * import { type ZodStore } from 'zod-store';
+ * import { createZodJSON } from 'zod-store/json';
  *
  * const store: ZodStore<Settings> = createZodJSON({
  *   schema: SettingsSchema,
@@ -224,7 +226,7 @@ export type ZodStore<T> = {
  * A serializer that converts between data and string representation.
  *
  * Implement this interface to add support for custom file formats.
- * Built-in implementations include {@link jsonSerializer}.
+ * Built-in implementations are available via `zod-store/json` and `zod-store/yaml`.
  *
  * @example
  * ```typescript

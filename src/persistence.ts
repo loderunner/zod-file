@@ -174,7 +174,7 @@ export type SaveOptions = {
  * A persistence instance for type-safe file operations.
  *
  * Created by {@link createZodStore}, or the format-specific factories
- * `createZodJSON` (from `zod-store/json`) and `createZodYAML` (from `zod-store/yaml`).
+ * `createZodJSON` (from `zod-store/json`), `createZodYAML` (from `zod-store/yaml`), and `createZodTOML` (from `zod-store/toml`).
  * Provides methods to load and save data with Zod validation and optional schema migrations.
  *
  * @typeParam T - The data type managed by this instance
@@ -226,7 +226,7 @@ export type ZodStore<T> = {
  * A serializer that converts between data and string representation.
  *
  * Implement this interface to add support for custom file formats.
- * Built-in implementations are available via `zod-store/json` and `zod-store/yaml`.
+ * Built-in implementations are available via `zod-store/json`, `zod-store/yaml`, and `zod-store/toml`.
  *
  * @example
  * ```typescript
@@ -271,8 +271,8 @@ export type Serializer = {
 /**
  * Creates a ZodStore persistence instance with a custom serializer.
  *
- * This is the core factory function used by {@link createZodJSON} and
- * `createZodYAML`. Use this directly if you need a custom file format.
+ * This is the core factory function used by {@link createZodJSON},
+ * `createZodYAML`, and `createZodTOML`. Use this directly if you need a custom file format.
  *
  * @typeParam V - The current schema version number
  * @typeParam T - The data type produced by the schema

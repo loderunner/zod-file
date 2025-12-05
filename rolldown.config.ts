@@ -2,7 +2,12 @@ import { defineConfig } from 'rolldown';
 import { dts } from 'rolldown-plugin-dts';
 
 // Build each entry point separately to prevent shared chunks
-const entryPoints = ['src/index.ts', 'src/json.ts', 'src/yaml.ts'];
+const entryPoints = [
+  'src/index.ts',
+  'src/json.ts',
+  'src/yaml.ts',
+  'src/toml.ts',
+];
 const external = /^[^/.]/;
 
 export default defineConfig([

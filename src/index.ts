@@ -5,6 +5,7 @@
  * For format-specific factories, use the subpath exports:
  * - `zod-store/json` for JSON files
  * - `zod-store/yaml` for YAML files (requires `js-yaml` peer dependency)
+ * - `zod-store/toml` for TOML files (requires `smol-toml` peer dependency)
  *
  * @packageDocumentation
  *
@@ -46,6 +47,27 @@
  *
  * const data = await config.load('./config.yaml');
  * await config.save(data, './config.yaml');
+ * ```
+ *
+ * @example TOML persistence (requires smol-toml)
+ * ```typescript
+ * import { z } from 'zod';
+ * import { createZodTOML } from 'zod-store/toml';
+ *
+ * const ConfigSchema = z.object({
+ *   database: z.object({
+ *     host: z.string(),
+ *     port: z.number(),
+ *   }),
+ * });
+ *
+ * const config = createZodTOML({
+ *   schema: ConfigSchema,
+ *   default: { database: { host: 'localhost', port: 5432 } },
+ * });
+ *
+ * const data = await config.load('./config.toml');
+ * await config.save(data, './config.toml');
  * ```
  */
 

@@ -21,6 +21,11 @@
       "types": "./dist/yaml.d.ts",
       "import": "./dist/esm/yaml.mjs",
       "require": "./dist/cjs/yaml.cjs"
+    },
+    "./toml": {
+      "types": "./dist/toml.d.ts",
+      "import": "./dist/esm/toml.mjs",
+      "require": "./dist/cjs/toml.cjs"
     }
   },
   "scripts": {
@@ -55,6 +60,7 @@
     "prettier": "^3.7.4",
     "rolldown": "1.0.0-beta.53",
     "rolldown-plugin-dts": "^0.18.2",
+    "smol-toml": "^1.5.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.1",
     "vitest": "^4.0.15"
@@ -63,10 +69,14 @@
     "zod": "^4.1.13"
   },
   "peerDependencies": {
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "smol-toml": "^1.0.0"
   },
   "peerDependenciesMeta": {
     "js-yaml": {
+      "optional": true
+    },
+    "smol-toml": {
       "optional": true
     }
   }

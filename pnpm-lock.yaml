@@ -57,6 +57,9 @@ importers:
       rolldown-plugin-dts:
         specifier: ^0.18.2
         version: 0.18.3(rolldown@1.0.0-beta.53)(typescript@5.9.3)
+      smol-toml:
+        specifier: ^1.5.2
+        version: 1.5.2
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -1672,6 +1675,10 @@ packages:
 
   siginfo@2.0.0:
     resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
+
+  smol-toml@1.5.2:
+    resolution: {integrity: sha512-QlaZEqcAH3/RtNyet1IPIYPsEWAaYyXXv1Krsi+1L/QHppjX4Ifm8MQsBISz9vE8cHicIq3clogsheili5vhaQ==}
+    engines: {node: '>= 18'}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -3581,6 +3588,8 @@ snapshots:
       side-channel-weakmap: 1.0.2
 
   siginfo@2.0.0: {}
+
+  smol-toml@1.5.2: {}
 
   source-map-js@1.2.1: {}
 

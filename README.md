@@ -1,3 +1,10 @@
+[![npm version](https://img.shields.io/npm/v/zod-store)](https://www.npmjs.com/package/zod-store)
+[![CI status](https://github.com/loderunner/zod-store/actions/workflows/lint-test-build.yml/badge.svg)](https://github.com/loderunner/zod-store/actions)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/zod-store)](https://bundlephobia.com/package/zod-store)
+[![license](https://img.shields.io/npm/l/zod-store)](LICENSE)
+[![Ko-fi donate](https://img.shields.io/badge/Ko--fi-donate-ff5f5f?logo=ko-fi&logoColor=white)](https://ko-fi.com/loderunner)
+[![NPM Trusted Publishing](https://img.shields.io/badge/NPM-Trusted%20Publishing-success?logo=npm)](https://www.npmjs.com/package/zod-store#provenance-details-header)
+
 # zod-store
 
 A type-safe file persistence library with [Zod](https://zod.dev) validation and

@@ -15,11 +15,13 @@ export default defineConfig([
         format: 'cjs',
         dir: 'dist/cjs',
         entryFileNames: '[name].cjs',
+        chunkFileNames: '[name]-[hash].cjs',
       },
       {
         format: 'esm',
         dir: 'dist/esm',
         entryFileNames: '[name].mjs',
+        chunkFileNames: '[name]-[hash].mjs',
       },
     ],
   },

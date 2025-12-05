@@ -10,7 +10,7 @@ import tseslint from 'typescript-eslint';
 export default [
   { files: ['**/*.{js,mjs,cjs,ts}'] },
   {
-    ignores: ['dist/**/*', '**/__mocks__/**/*.cjs'],
+    ignores: ['dist/**/*', 'e2e/**/*-test.*'],
   },
   {
     languageOptions: { globals: globals.node },
@@ -21,7 +21,10 @@ export default [
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['*.{config,setup}.{js,mjs,cjs,ts}'],
+          allowDefaultProject: [
+            '*.{config,setup}.{js,mjs,cjs,ts}',
+            'e2e/e2e.test.ts',
+          ],
         },
       },
     },

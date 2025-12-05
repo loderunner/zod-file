@@ -1,8 +1,8 @@
 # zod-store
 
-A type-safe file persistence library with Zod validation and schema migrations
-for Node.js. Supports JSON out of the box, and YAML and TOML with optional
-dependencies.
+A type-safe file persistence library with [Zod](https://zod.dev) validation and
+schema migrations for Node.js. Supports JSON out of the box, and YAML and TOML
+with optional dependencies.
 
 ## Features
 

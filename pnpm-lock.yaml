@@ -13,61 +13,61 @@ importers:
         version: 4.1.13
     devDependencies:
       '@eslint/js':
-        specifier: ^9.39.1
+        specifier: 9.39.1
         version: 9.39.1
       '@types/js-yaml':
-        specifier: ^4.0.9
+        specifier: 4.0.9
         version: 4.0.9
       '@types/node':
-        specifier: ^24.10.1
+        specifier: 24.10.1
         version: 24.10.1
       '@vitest/eslint-plugin':
-        specifier: ^1.5.1
+        specifier: 1.5.1
         version: 1.5.1(eslint@9.39.1)(typescript@5.9.3)(vitest@4.0.15(@types/node@24.10.1))
       eslint:
-        specifier: ^9.39.1
+        specifier: 9.39.1
         version: 9.39.1
       eslint-config-prettier:
-        specifier: ^10.1.8
+        specifier: 10.1.8
         version: 10.1.8(eslint@9.39.1)
       eslint-import-resolver-typescript:
-        specifier: ^4.4.4
+        specifier: 4.4.4
         version: 4.4.4(eslint-plugin-import@2.32.0)(eslint@9.39.1)
       eslint-plugin-import:
-        specifier: ^2.32.0
+        specifier: 2.32.0
         version: 2.32.0(@typescript-eslint/parser@8.48.1(eslint@9.39.1)(typescript@5.9.3))(eslint-import-resolver-typescript@4.4.4)(eslint@9.39.1)
       eslint-plugin-jsdoc:
-        specifier: ^61.4.1
+        specifier: 61.4.1
         version: 61.4.1(eslint@9.39.1)
       globals:
-        specifier: ^16.5.0
+        specifier: 16.5.0
         version: 16.5.0
       js-yaml:
-        specifier: ^4.1.1
+        specifier: 4.1.1
         version: 4.1.1
       memfs:
-        specifier: ^4.51.1
+        specifier: 4.51.1
         version: 4.51.1
       prettier:
-        specifier: ^3.7.4
+        specifier: 3.7.4
         version: 3.7.4
       rolldown:
         specifier: 1.0.0-beta.53
         version: 1.0.0-beta.53
       rolldown-plugin-dts:
-        specifier: ^0.18.2
-        version: 0.18.3(rolldown@1.0.0-beta.53)(typescript@5.9.3)
+        specifier: 0.18.2
+        version: 0.18.2(rolldown@1.0.0-beta.53)(typescript@5.9.3)
       smol-toml:
-        specifier: ^1.5.2
+        specifier: 1.5.2
         version: 1.5.2
       typescript:
-        specifier: ^5.9.3
+        specifier: 5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.48.1
+        specifier: 8.48.1
         version: 8.48.1(eslint@9.39.1)(typescript@5.9.3)
       vitest:
-        specifier: ^4.0.15
+        specifier: 4.0.15
         version: 4.0.15(@types/node@24.10.1)
 
 packages:
@@ -1587,8 +1587,8 @@ packages:
     engines: {node: '>= 0.4'}
     hasBin: true
 
-  rolldown-plugin-dts@0.18.3:
-    resolution: {integrity: sha512-rd1LZ0Awwfyn89UndUF/HoFF4oH9a5j+2ZeuKSJYM80vmeN/p0gslYMnHTQHBEXPhUlvAlqGA3tVgXB/1qFNDg==}
+  rolldown-plugin-dts@0.18.2:
+    resolution: {integrity: sha512-jRz3SHwr69F/IGEDMHtWjwVjgZwo3PZEadmMt4uA/e3rbIytoLJhvktSKlIAy/4QeWhVL9XeuCJBC66wvBQRwg==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
       '@ts-macro/tsc': ^0.3.6
@@ -3444,7 +3444,7 @@ snapshots:
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
-  rolldown-plugin-dts@0.18.3(rolldown@1.0.0-beta.53)(typescript@5.9.3):
+  rolldown-plugin-dts@0.18.2(rolldown@1.0.0-beta.53)(typescript@5.9.3):
     dependencies:
       '@babel/generator': 7.28.5
       '@babel/parser': 7.28.5

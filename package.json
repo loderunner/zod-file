@@ -1,7 +1,37 @@
 {
   "name": "zod-store",
-  "version": "0.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "Type-safe file persistence with Zod validation and schema migrations for Node.js. Supports JSON, YAML, and TOML.",
+  "keywords": [
+    "zod",
+    "persistence",
+    "config",
+    "configuration",
+    "schema",
+    "migration",
+    "json",
+    "yaml",
+    "toml",
+    "typescript",
+    "type-safe",
+    "validation",
+    "file",
+    "storage",
+    "settings"
+  ],
+  "author": "Charles Francoise",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loderunner/zod-store.git"
+  },
+  "homepage": "https://github.com/loderunner/zod-store#readme",
+  "bugs": {
+    "url": "https://github.com/loderunner/zod-store/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "type": "module",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.mjs",
@@ -40,30 +70,27 @@
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run build"
   },
-  "keywords": [],
-  "author": "Charles Francoise",
-  "license": "Apache-2.0",
   "packageManager": "pnpm@10.18.0",
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@types/js-yaml": "^4.0.9",
-    "@types/node": "^24.10.1",
-    "@vitest/eslint-plugin": "^1.5.1",
-    "eslint": "^9.39.1",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-import-resolver-typescript": "^4.4.4",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-jsdoc": "^61.4.1",
-    "globals": "^16.5.0",
-    "js-yaml": "^4.1.1",
-    "memfs": "^4.51.1",
-    "prettier": "^3.7.4",
+    "@eslint/js": "9.39.1",
+    "@types/js-yaml": "4.0.9",
+    "@types/node": "24.10.1",
+    "@vitest/eslint-plugin": "1.5.1",
+    "eslint": "9.39.1",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-import-resolver-typescript": "4.4.4",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-jsdoc": "61.4.1",
+    "globals": "16.5.0",
+    "js-yaml": "4.1.1",
+    "memfs": "4.51.1",
+    "prettier": "3.7.4",
     "rolldown": "1.0.0-beta.53",
-    "rolldown-plugin-dts": "^0.18.2",
-    "smol-toml": "^1.5.2",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.48.1",
-    "vitest": "^4.0.15"
+    "rolldown-plugin-dts": "0.18.2",
+    "smol-toml": "1.5.2",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.48.1",
+    "vitest": "4.0.15"
   },
   "dependencies": {
     "zod": "^4.1.13"

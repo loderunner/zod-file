@@ -17,7 +17,7 @@ const YAMLSerializer: Serializer = {
       indent: compact ? 0 : 2,
       flowLevel: compact ? 0 : -1,
       lineWidth: compact ? -1 : 80,
-    });
+    }).trimEnd();
   },
 } as const;
 

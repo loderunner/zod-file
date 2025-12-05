@@ -26,7 +26,8 @@
   "scripts": {
     "lint": "prettier --check . && eslint .",
     "lint:fix": "prettier --write . && eslint --fix .",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "build": "rolldown -c",
     "watch": "rolldown --watch -c",
     "clean": "rm -rf dist",
@@ -48,6 +49,7 @@
     "eslint-plugin-jsdoc": "^61.4.1",
     "globals": "^16.5.0",
     "js-yaml": "^4.1.1",
+    "memfs": "^4.51.1",
     "prettier": "^3.7.4",
     "rolldown": "1.0.0-beta.53",
     "rolldown-plugin-dts": "^0.18.2",

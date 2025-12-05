@@ -12,6 +12,6 @@
     "declaration": false,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src"],
+  "include": ["src", "vitest.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

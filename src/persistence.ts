@@ -39,7 +39,7 @@ import { ZodStoreError } from './errors';
  * };
  * ```
  */
-export type MigrationStep<V extends number, TFrom, TTo> = {
+export type MigrationStep<V extends number = number, TFrom = any, TTo = any> = {
   /**
    * The version number this migration migrates from.
    * Data at this version will be transformed to version `V+1`.
@@ -121,7 +121,7 @@ export type ZodStoreOptions<
    * and ending at `version - 1`. Each migration transforms data from
    * version V to version V+1.
    */
-  migrations?: MigrationStep<number, unknown, unknown>[];
+  migrations?: MigrationStep[];
 };
 
 /**
@@ -439,9 +439,11 @@ export function createZodStore<
 
         try {
           // Parse with migration's schema
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const parsedData = await migration.schema.parseAsync(data);
 
           // Run migration (handle both sync and async)
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const migrationResult = migration.migrate(parsedData);
           data = await Promise.resolve(migrationResult);
 

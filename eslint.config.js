@@ -10,7 +10,7 @@ import tseslint from 'typescript-eslint';
 export default [
   { files: ['**/*.{js,mjs,cjs,ts}'] },
   {
-    ignores: ['dist/**/*'],
+    ignores: ['dist/**/*', '**/__mocks__/**/*.cjs'],
   },
   {
     languageOptions: { globals: globals.node },
@@ -103,6 +103,11 @@ export default [
   {
     files: ['**/*.test.ts'],
     ...vitest.configs.recommended,
+    rules: {
+      ...vitest.configs.recommended.rules,
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+    },
   },
   prettierConfig,
   // Re-enables curly braces for all statements after Prettier config

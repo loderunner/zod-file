@@ -2,9 +2,9 @@ import * as YAML from 'js-yaml';
 
 import {
   type Serializer,
-  type ZodStore,
-  type ZodStoreOptions,
-  createZodStore,
+  type ZodFile,
+  type ZodFileOptions,
+  createZodFile,
 } from './persistence';
 
 const YAMLSerializer: Serializer = {
@@ -22,20 +22,20 @@ const YAMLSerializer: Serializer = {
 } as const;
 
 /**
- * Creates a ZodStore persistence instance for type-safe YAML file operations.
+ * Creates a ZodFile persistence instance for type-safe YAML file operations.
  *
  * Requires the `js-yaml` package to be installed as a peer dependency.
  *
  * @typeParam V - The current schema version number
  * @typeParam T - The data type produced by the schema
  * @param options - Configuration options for the persistence instance
- * @returns A {@link ZodStore} instance with typed `load` and `save` methods
+ * @returns A {@link ZodFile} instance with typed `load` and `save` methods
  * @throws {Error} If the migration chain is invalid (non-sequential or incomplete)
  *
  * @example Basic usage without versioning
  * ```typescript
  * import { z } from 'zod';
- * import { createZodYAML } from 'zod-store/yaml';
+ * import { createZodYAML } from 'zod-file/yaml';
  *
  * const SettingsSchema = z.object({ theme: z.string() });
  * const settings = createZodYAML({
@@ -50,7 +50,7 @@ const YAMLSerializer: Serializer = {
  * @example Versioned schema with migrations
  * ```typescript
  * import { z } from 'zod';
- * import { createZodYAML } from 'zod-store/yaml';
+ * import { createZodYAML } from 'zod-file/yaml';
  *
  * const SettingsSchemaV1 = z.object({ theme: z.string() });
  * const SettingsSchemaV2 = z.object({
@@ -72,6 +72,6 @@ const YAMLSerializer: Serializer = {
 export function createZodYAML<
   V extends number,
   T extends Record<string, unknown>,
->(options: ZodStoreOptions<V, T>): ZodStore<T> {
-  return createZodStore(options, YAMLSerializer);
+>(options: ZodFileOptions<V, T>): ZodFile<T> {
+  return createZodFile(options, YAMLSerializer);
 }

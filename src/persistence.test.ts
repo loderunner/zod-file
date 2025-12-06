@@ -3,11 +3,11 @@ import fs from 'node:fs/promises';
 import { Mocked, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { ZodStoreError } from './errors';
+import { ZodFileError } from './errors';
 import {
   type MigrationStep,
   type Serializer,
-  createZodStore,
+  createZodFile,
 } from './persistence';
 
 vi.mock('node:fs/promises');
@@ -22,14 +22,14 @@ const mockSerializer: Mocked<Serializer> = {
   stringify: vi.fn(),
 };
 
-const testFile = '/tmp/zod-store-test.json';
+const testFile = '/tmp/zod-file-test.json';
 
 const stringToBool = z.codec(z.string(), z.boolean(), {
   decode: (str) => str.toLowerCase() === 'true' || str.toLowerCase() === 'yes',
   encode: (bool) => bool.toString(),
 });
 
-describe('createZodStore', () => {
+describe('createZodFile', () => {
   beforeEach(() => {
     vi.resetAllMocks();
   });
@@ -41,7 +41,7 @@ describe('createZodStore', () => {
         age: z.number(),
       });
 
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       const serializedOutput = '<serialized-output-save-test-1>';
       mockSerializer.stringify.mockReturnValue(serializedOutput);
@@ -62,7 +62,7 @@ describe('createZodStore', () => {
         age: z.number(),
       });
 
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       const fileContent = '<file-content-load-test-1>';
       mockFsPromises.readFile.mockResolvedValue(fileContent);
@@ -82,7 +82,7 @@ describe('createZodStore', () => {
       });
 
       const defaultData = { theme: 'light' };
-      const store = createZodStore(
+      const store = createZodFile(
         { schema, default: defaultData },
         mockSerializer,
       );
@@ -99,7 +99,7 @@ describe('createZodStore', () => {
       });
 
       const defaultData = { theme: 'light' };
-      const store = createZodStore(
+      const store = createZodFile(
         { schema, default: defaultData },
         mockSerializer,
       );
@@ -119,7 +119,7 @@ describe('createZodStore', () => {
       });
 
       const defaultData = { theme: 'light' };
-      const store = createZodStore(
+      const store = createZodFile(
         { schema, default: defaultData },
         mockSerializer,
       );
@@ -139,7 +139,7 @@ describe('createZodStore', () => {
         callId: z.number(),
       });
 
-      const store = createZodStore(
+      const store = createZodFile(
         {
           schema,
           default: () => {
@@ -165,11 +165,11 @@ describe('createZodStore', () => {
         theme: z.string(),
       });
 
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       mockFsPromises.readFile.mockRejectedValue(new Error('File not found'));
 
-      await expect(store.load(testFile)).rejects.toThrowZodStoreError(
+      await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'FileRead',
       );
     });
@@ -181,7 +181,7 @@ describe('createZodStore', () => {
         theme: z.string(),
       });
 
-      const store = createZodStore(
+      const store = createZodFile(
         { schema, default: { theme: 'light' } },
         mockSerializer,
       );
@@ -190,7 +190,7 @@ describe('createZodStore', () => {
 
       await expect(
         store.load(testFile, { throwOnError: true }),
-      ).rejects.toThrowZodStoreError('FileRead');
+      ).rejects.toThrowZodFileError('FileRead');
     });
 
     it('should throw on invalid format even with default when throwOnError is true', async () => {
@@ -198,7 +198,7 @@ describe('createZodStore', () => {
         theme: z.string(),
       });
 
-      const store = createZodStore(
+      const store = createZodFile(
         { schema, default: { theme: 'light' } },
         mockSerializer,
       );
@@ -210,7 +210,7 @@ describe('createZodStore', () => {
 
       await expect(
         store.load(testFile, { throwOnError: true }),
-      ).rejects.toThrowZodStoreError('InvalidFormat');
+      ).rejects.toThrowZodFileError('InvalidFormat');
     });
   });
 
@@ -220,7 +220,7 @@ describe('createZodStore', () => {
         name: z.string(),
       });
 
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       await store.save({ name: 'Alice' }, testFile);
 
@@ -235,7 +235,7 @@ describe('createZodStore', () => {
         name: z.string(),
       });
 
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       await store.save({ name: 'Alice' }, testFile, { compact: true });
 
@@ -252,7 +252,7 @@ describe('createZodStore', () => {
         theme: z.string(),
       });
 
-      const store = createZodStore(
+      const store = createZodFile(
         { schema, version: 1 as const },
         mockSerializer,
       );
@@ -270,7 +270,7 @@ describe('createZodStore', () => {
         theme: z.string(),
       });
 
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       await store.save({ theme: 'dark' }, testFile);
 
@@ -285,7 +285,7 @@ describe('createZodStore', () => {
         theme: z.string(),
       });
 
-      const store = createZodStore(
+      const store = createZodFile(
         { schema, version: 1 as const },
         mockSerializer,
       );
@@ -303,7 +303,7 @@ describe('createZodStore', () => {
         theme: z.string(),
       });
 
-      const store = createZodStore(
+      const store = createZodFile(
         { schema, version: 1 as const },
         mockSerializer,
       );
@@ -313,7 +313,7 @@ describe('createZodStore', () => {
       );
       mockSerializer.parse.mockReturnValue({ theme: 'dark' });
 
-      await expect(store.load(testFile)).rejects.toThrowZodStoreError(
+      await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'InvalidVersion',
       );
     });
@@ -323,7 +323,7 @@ describe('createZodStore', () => {
         theme: z.string(),
       });
 
-      const store = createZodStore(
+      const store = createZodFile(
         { schema, version: 1 as const },
         mockSerializer,
       );
@@ -336,7 +336,7 @@ describe('createZodStore', () => {
         theme: 'dark',
       });
 
-      await expect(store.load(testFile)).rejects.toThrowZodStoreError(
+      await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'InvalidVersion',
       );
     });
@@ -346,7 +346,7 @@ describe('createZodStore', () => {
         theme: z.string(),
       });
 
-      const store = createZodStore(
+      const store = createZodFile(
         { schema, version: 1 as const },
         mockSerializer,
       );
@@ -356,7 +356,7 @@ describe('createZodStore', () => {
       );
       mockSerializer.parse.mockReturnValue({ _version: 1.5, theme: 'dark' });
 
-      await expect(store.load(testFile)).rejects.toThrowZodStoreError(
+      await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'InvalidVersion',
       );
     });
@@ -366,7 +366,7 @@ describe('createZodStore', () => {
         theme: z.string(),
       });
 
-      const store = createZodStore(
+      const store = createZodFile(
         { schema, version: 1 as const },
         mockSerializer,
       );
@@ -376,7 +376,7 @@ describe('createZodStore', () => {
       );
       mockSerializer.parse.mockReturnValue({ _version: 0, theme: 'dark' });
 
-      await expect(store.load(testFile)).rejects.toThrowZodStoreError(
+      await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'InvalidVersion',
       );
     });
@@ -386,7 +386,7 @@ describe('createZodStore', () => {
         theme: z.string(),
       });
 
-      const store = createZodStore(
+      const store = createZodFile(
         { schema, version: 1 as const },
         mockSerializer,
       );
@@ -396,7 +396,7 @@ describe('createZodStore', () => {
       );
       mockSerializer.parse.mockReturnValue({ _version: 2, theme: 'dark' });
 
-      await expect(store.load(testFile)).rejects.toThrowZodStoreError(
+      await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'UnsupportedVersion',
       );
     });
@@ -424,7 +424,7 @@ describe('createZodStore', () => {
         ),
       };
 
-      const store = createZodStore(
+      const store = createZodFile(
         {
           version: 2 as const,
           schema: SettingsV2Schema,
@@ -480,7 +480,7 @@ describe('createZodStore', () => {
         ),
       };
 
-      const store = createZodStore(
+      const store = createZodFile(
         {
           version: 3 as const,
           schema: SettingsV3Schema,
@@ -525,7 +525,7 @@ describe('createZodStore', () => {
         },
       };
 
-      const store = createZodStore(
+      const store = createZodFile(
         {
           version: 2 as const,
           schema: SettingsV2,
@@ -548,7 +548,7 @@ describe('createZodStore', () => {
       const schema = z.object({ theme: z.string() });
 
       expect(() => {
-        createZodStore(
+        createZodFile(
           {
             version: 3 as const,
             schema,
@@ -574,7 +574,7 @@ describe('createZodStore', () => {
       const schema = z.object({ theme: z.string() });
 
       expect(() => {
-        createZodStore(
+        createZodFile(
           {
             version: 3 as const,
             schema,
@@ -595,7 +595,7 @@ describe('createZodStore', () => {
       const schema = z.object({ theme: z.string() });
 
       expect(() => {
-        createZodStore(
+        createZodFile(
           {
             version: 3 as const,
             schema,
@@ -617,7 +617,7 @@ describe('createZodStore', () => {
       const schema = z.object({ theme: z.string() });
 
       expect(() => {
-        createZodStore(
+        createZodFile(
           {
             schema,
             migrations: [
@@ -653,7 +653,7 @@ describe('createZodStore', () => {
         }),
       };
 
-      const store = createZodStore(
+      const store = createZodFile(
         {
           version: 2 as const,
           schema: SettingsV2,
@@ -665,7 +665,7 @@ describe('createZodStore', () => {
       // File has invalid data for v1 schema
       mockSerializer.parse.mockReturnValue({ _version: 1, invalid: 'data' });
 
-      await expect(store.load(testFile)).rejects.toThrowZodStoreError(
+      await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'Migration',
       );
     });
@@ -689,7 +689,7 @@ describe('createZodStore', () => {
         },
       };
 
-      const store = createZodStore(
+      const store = createZodFile(
         {
           version: 2 as const,
           schema: SettingsV2,
@@ -700,7 +700,7 @@ describe('createZodStore', () => {
 
       mockSerializer.parse.mockReturnValue({ _version: 1, theme: 'dark' });
 
-      await expect(store.load(testFile)).rejects.toThrowZodStoreError(
+      await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'Migration',
       );
     });
@@ -725,7 +725,7 @@ describe('createZodStore', () => {
       };
 
       const defaultData = { theme: 'light' as const, fontSize: 14 };
-      const store = createZodStore(
+      const store = createZodFile(
         {
           version: 2 as const,
           schema: SettingsV2,
@@ -749,11 +749,11 @@ describe('createZodStore', () => {
         fontSize: z.number().min(8).max(72),
       });
 
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       mockSerializer.parse.mockReturnValue({ theme: 'invalid', fontSize: 100 });
 
-      await expect(store.load(testFile)).rejects.toThrowZodStoreError(
+      await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'Validation',
       );
     });
@@ -764,7 +764,7 @@ describe('createZodStore', () => {
         valid: stringToBool,
       });
 
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       await store.save({ value: 'test', valid: true }, testFile);
 
@@ -780,7 +780,7 @@ describe('createZodStore', () => {
         valid: stringToBool,
       });
 
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       mockSerializer.parse.mockReturnValue({ value: 'test', valid: 'YES' });
       const loaded = await store.load(testFile);
@@ -798,11 +798,11 @@ describe('createZodStore', () => {
         }),
       });
 
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       await expect(
         store.save({ value: 'test' }, testFile),
-      ).rejects.toThrowZodStoreError('Encoding');
+      ).rejects.toThrowZodFileError('Encoding');
     });
 
     it('should throw when decoding fails', async () => {
@@ -815,33 +815,33 @@ describe('createZodStore', () => {
         }),
       });
 
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       mockSerializer.parse.mockReturnValue({ value: 6 });
 
-      await expect(store.load(testFile)).rejects.toThrowZodStoreError(
+      await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'Validation',
       );
     });
   });
 
   describe('error handling', () => {
-    it('should throw ZodStoreError with correct code on file read error', async () => {
+    it('should throw ZodFileError with correct code on file read error', async () => {
       const schema = z.object({ theme: z.string() });
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       const nonExistentFile = '/nonexistent/path/file.json';
       const fileError = new Error('File not found');
       mockFsPromises.readFile.mockRejectedValue(fileError);
 
-      await expect(store.load(nonExistentFile)).rejects.toThrowZodStoreError(
+      await expect(store.load(nonExistentFile)).rejects.toThrowZodFileError(
         'FileRead',
       );
       // Also verify cause exists
       await expect(store.load(nonExistentFile)).rejects.toSatisfy(
         (error: unknown) => {
           return (
-            error instanceof ZodStoreError &&
+            error instanceof ZodFileError &&
             error.code === 'FileRead' &&
             error.cause instanceof Error
           );
@@ -849,9 +849,9 @@ describe('createZodStore', () => {
       );
     });
 
-    it('should throw ZodStoreError with correct code on file write error', async () => {
+    it('should throw ZodFileError with correct code on file write error', async () => {
       const schema = z.object({ theme: z.string() });
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       const readOnlyFile = '/root/readonly.json';
       mockFsPromises.writeFile.mockRejectedValue(
@@ -860,7 +860,7 @@ describe('createZodStore', () => {
 
       await expect(
         store.save({ theme: 'dark' }, readOnlyFile),
-      ).rejects.toThrowZodStoreError('FileWrite');
+      ).rejects.toThrowZodFileError('FileWrite');
     });
 
     it('should include Zod error details in Validation error', async () => {
@@ -869,7 +869,7 @@ describe('createZodStore', () => {
         fontSize: z.number(),
       });
 
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       mockFsPromises.readFile.mockResolvedValue(
         '<file-content-validation-details-1>',
@@ -879,12 +879,12 @@ describe('createZodStore', () => {
         fontSize: 'not a number',
       });
 
-      await expect(store.load(testFile)).rejects.toThrowZodStoreError(
+      await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'Validation',
       );
       await expect(store.load(testFile)).rejects.toSatisfy((error: unknown) => {
         return (
-          error instanceof ZodStoreError &&
+          error instanceof ZodFileError &&
           error.code === 'Validation' &&
           error.message.includes('Schema validation failed')
         );
@@ -895,7 +895,7 @@ describe('createZodStore', () => {
   describe('edge cases', () => {
     it('should handle empty objects', async () => {
       const schema = z.object({});
-      const store = createZodStore({ schema }, mockSerializer);
+      const store = createZodFile({ schema }, mockSerializer);
 
       mockFsPromises.readFile.mockResolvedValue('<file-content-empty-obj-1>');
       mockSerializer.parse.mockReturnValue({});

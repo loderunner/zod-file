@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 
 import { ZodError, z } from 'zod';
 
-import { ZodStoreError } from './errors';
+import { ZodFileError } from './errors';
 
 /**
  * A migration step that transforms data from one schema version to the next.
@@ -18,7 +18,7 @@ import { ZodStoreError } from './errors';
  * @example
  * ```typescript
  * import { z } from 'zod';
- * import type { MigrationStep } from 'zod-store';
+ * import type { MigrationStep } from 'zod-file';
  *
  * const SettingsV1 = z.object({ theme: z.string() });
  * type SettingsV1 = z.infer<typeof SettingsV1>;
@@ -63,7 +63,7 @@ export type MigrationStep<V extends number = number, TFrom = any, TTo = any> = {
 };
 
 /**
- * Configuration options for creating a ZodStore persistence instance.
+ * Configuration options for creating a ZodFile persistence instance.
  *
  * @typeParam V - The current schema version number (literal type)
  * @typeParam T - The current schema's data type
@@ -71,13 +71,13 @@ export type MigrationStep<V extends number = number, TFrom = any, TTo = any> = {
  * @example
  * ```typescript
  * // Without versioning
- * const options: ZodStoreOptions<number, Settings> = {
+ * const options: ZodFileOptions<number, Settings> = {
  *   schema: SettingsSchema,
  *   default: { theme: 'light' },
  * };
  *
  * // With versioning and migrations
- * const options: ZodStoreOptions<2, SettingsV2> = {
+ * const options: ZodFileOptions<2, SettingsV2> = {
  *   version: 2 as const,
  *   schema: SettingsSchemaV2,
  *   default: { theme: 'light', fontSize: 14 },
@@ -85,7 +85,7 @@ export type MigrationStep<V extends number = number, TFrom = any, TTo = any> = {
  * };
  * ```
  */
-export type ZodStoreOptions<
+export type ZodFileOptions<
   V extends number,
   T extends Record<string, unknown>,
 > = {
@@ -173,18 +173,18 @@ export type SaveOptions = {
 /**
  * A persistence instance for type-safe file operations.
  *
- * Created by {@link createZodStore}, or the format-specific factories
- * `createZodJSON` (from `zod-store/json`), `createZodYAML` (from `zod-store/yaml`), and `createZodTOML` (from `zod-store/toml`).
+ * Created by {@link createZodFile}, or the format-specific factories
+ * `createZodJSON` (from `zod-file/json`), `createZodYAML` (from `zod-file/yaml`), and `createZodTOML` (from `zod-file/toml`).
  * Provides methods to load and save data with Zod validation and optional schema migrations.
  *
  * @typeParam T - The data type managed by this instance
  *
  * @example
  * ```typescript
- * import { type ZodStore } from 'zod-store';
- * import { createZodJSON } from 'zod-store/json';
+ * import { type ZodFile } from 'zod-file';
+ * import { createZodJSON } from 'zod-file/json';
  *
- * const store: ZodStore<Settings> = createZodJSON({
+ * const store: ZodFile<Settings> = createZodJSON({
  *   schema: SettingsSchema,
  *   default: { theme: 'light' },
  * });
@@ -193,7 +193,7 @@ export type SaveOptions = {
  * await store.save({ theme: 'dark' }, './settings.json');
  * ```
  */
-export type ZodStore<T> = {
+export type ZodFile<T> = {
   /**
    * Loads and validates data from a file.
    *
@@ -203,7 +203,7 @@ export type ZodStore<T> = {
    * @param path - Path to the file
    * @param options - Load options
    * @returns The validated data
-   * @throws {ZodStoreError} When loading fails and no default is configured, or when `throwOnError` is true
+   * @throws {ZodFileError} When loading fails and no default is configured, or when `throwOnError` is true
    */
   load(path: string, options?: LoadOptions): Promise<T>;
 
@@ -217,7 +217,7 @@ export type ZodStore<T> = {
    * @param data - The data to save (must match the schema)
    * @param path - Path to the file
    * @param options - Save options
-   * @throws {ZodStoreError} When encoding or writing fails
+   * @throws {ZodFileError} When encoding or writing fails
    */
   save(data: T, path: string, options?: SaveOptions): Promise<void>;
 };
@@ -226,11 +226,11 @@ export type ZodStore<T> = {
  * A serializer that converts between data and string representation.
  *
  * Implement this interface to add support for custom file formats.
- * Built-in implementations are available via `zod-store/json`, `zod-store/yaml`, and `zod-store/toml`.
+ * Built-in implementations are available via `zod-file/json`, `zod-file/yaml`, and `zod-file/toml`.
  *
  * @example
  * ```typescript
- * import type { Serializer } from 'zod-store';
+ * import type { Serializer } from 'zod-file';
  *
  * const customSerializer: Serializer = {
  *   parse(content) {
@@ -269,7 +269,7 @@ export type Serializer = {
 };
 
 /**
- * Creates a ZodStore persistence instance with a custom serializer.
+ * Creates a ZodFile persistence instance with a custom serializer.
  *
  * This is the core factory function used by {@link createZodJSON},
  * `createZodYAML`, and `createZodTOML`. Use this directly if you need a custom file format.
@@ -278,12 +278,12 @@ export type Serializer = {
  * @typeParam T - The data type produced by the schema
  * @param options - Configuration options for the persistence instance
  * @param serializer - The serializer to use for parsing and stringifying
- * @returns A {@link ZodStore} instance with typed `load` and `save` methods
+ * @returns A {@link ZodFile} instance with typed `load` and `save` methods
  * @throws {Error} If the migration chain is invalid (non-sequential or incomplete)
  *
  * @example
  * ```typescript
- * import { createZodStore, type Serializer } from 'zod-store';
+ * import { createZodFile, type Serializer } from 'zod-file';
  *
  * const mySerializer: Serializer = {
  *   parse: (s) => JSON.parse(s),
@@ -291,13 +291,13 @@ export type Serializer = {
  *   formatName: 'JSON',
  * };
  *
- * const store = createZodStore({ schema: MySchema }, mySerializer);
+ * const store = createZodFile({ schema: MySchema }, mySerializer);
  * ```
  */
-export function createZodStore<
+export function createZodFile<
   V extends number,
   T extends Record<string, unknown>,
->(options: ZodStoreOptions<V, T>, serializer: Serializer): ZodStore<T> {
+>(options: ZodFileOptions<V, T>, serializer: Serializer): ZodFile<T> {
   const {
     version: currentVersion,
     schema,
@@ -346,7 +346,7 @@ export function createZodStore<
       fileContent = await fs.readFile(filePath, 'utf-8');
     } catch (error) {
       if (throwOnError || defaultValue === undefined) {
-        throw new ZodStoreError(
+        throw new ZodFileError(
           'FileRead',
           `Failed to read file: ${filePath}`,
           error instanceof Error ? error : new Error(String(error)),
@@ -361,7 +361,7 @@ export function createZodStore<
       parsed = serializer.parse(fileContent);
     } catch (error) {
       if (throwOnError || defaultValue === undefined) {
-        throw new ZodStoreError(
+        throw new ZodFileError(
           'InvalidFormat',
           `Invalid ${serializer.formatName} in file: ${filePath}`,
           error instanceof Error ? error : new Error(String(error)),
@@ -379,7 +379,7 @@ export function createZodStore<
         !('_version' in parsed)
       ) {
         if (throwOnError || defaultValue === undefined) {
-          throw new ZodStoreError(
+          throw new ZodFileError(
             'InvalidVersion',
             `Missing _version field in file: ${filePath}`,
           );
@@ -394,7 +394,7 @@ export function createZodStore<
         versionValue <= 0
       ) {
         if (throwOnError || defaultValue === undefined) {
-          throw new ZodStoreError(
+          throw new ZodFileError(
             'InvalidVersion',
             `Invalid _version field in file: ${filePath}. Expected integer > 0, got ${JSON.stringify(versionValue)}`,
           );
@@ -406,7 +406,7 @@ export function createZodStore<
       // Check for unsupported future version
       if (fileVersion > currentVersion) {
         if (throwOnError || defaultValue === undefined) {
-          throw new ZodStoreError(
+          throw new ZodFileError(
             'UnsupportedVersion',
             `Unsupported file version ${fileVersion} in ${filePath}. Current schema version is ${currentVersion}`,
           );
@@ -429,7 +429,7 @@ export function createZodStore<
 
         if (migration === undefined) {
           if (throwOnError || defaultValue === undefined) {
-            throw new ZodStoreError(
+            throw new ZodFileError(
               'Migration',
               `No migration found for version ${dataVersion} in file: ${filePath}`,
             );
@@ -454,7 +454,7 @@ export function createZodStore<
             if (error instanceof ZodError) {
               message = `${message}\n${z.prettifyError(error)}`;
             }
-            throw new ZodStoreError(
+            throw new ZodFileError(
               'Migration',
               message,
               error instanceof Error ? error : new Error(String(error)),
@@ -477,7 +477,7 @@ export function createZodStore<
         if (error instanceof ZodError) {
           message = `${message}\n${z.prettifyError(error)}`;
         }
-        throw new ZodStoreError(
+        throw new ZodFileError(
           'Validation',
           message,
           error instanceof ZodError ? error : new Error(String(error)),
@@ -504,7 +504,7 @@ export function createZodStore<
       if (error instanceof ZodError) {
         message = `${message}\n${z.prettifyError(error)}`;
       }
-      throw new ZodStoreError(
+      throw new ZodFileError(
         'Encoding',
         message,
         error instanceof ZodError ? error : new Error(String(error)),
@@ -527,7 +527,7 @@ export function createZodStore<
     try {
       await fs.writeFile(filePath, content, 'utf-8');
     } catch (error) {
-      throw new ZodStoreError(
+      throw new ZodFileError(
         'FileWrite',
         `Failed to write file: ${filePath}`,
         error instanceof Error ? error : new Error(String(error)),

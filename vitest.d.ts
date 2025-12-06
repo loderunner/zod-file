@@ -5,9 +5,9 @@ import type { ErrorCode } from './src/errors';
  */
 declare module 'vitest' {
   interface Assertion {
-    toThrowZodStoreError(expectedCode?: ErrorCode): void;
+    toThrowZodFileError(expectedCode?: ErrorCode): void;
   }
   interface AsymmetricMatchersContaining {
-    toThrowZodStoreError(expectedCode?: ErrorCode): void;
+    toThrowZodFileError(expectedCode?: ErrorCode): void;
   }
 }

@@ -17,7 +17,7 @@ const testData = {
 };
 
 async function main() {
-  const testFile = join(tmpdir(), `zod-store-e2e-cjs-${Date.now()}.json`);
+  const testFile = join(tmpdir(), `zod-file-e2e-cjs-${Date.now()}.json`);
   const store = createZodJSON({
     schema: TestSchema,
   });

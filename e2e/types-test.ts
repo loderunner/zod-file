@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createZodJSON } from '../dist/json';
-import { ZodStore, ZodStoreError } from '../dist/index';
+import { ZodFile, ZodFileError } from '../dist/index';
 
 const TestSchema = z.object({
   name: z.string(),
@@ -8,13 +8,13 @@ const TestSchema = z.object({
 });
 
 // Test that types are correctly exported and usable
-const store: ZodStore<z.infer<typeof TestSchema>> = createZodJSON({
+const store: ZodFile<z.infer<typeof TestSchema>> = createZodJSON({
   schema: TestSchema,
 });
 
-// Test that ZodStoreError class is available and can be used in type guards
+// Test that ZodFileError class is available and can be used in type guards
 function handleError(error: unknown): void {
-  if (error instanceof ZodStoreError) {
+  if (error instanceof ZodFileError) {
     const _code: string = error.code;
     const _message: string = error.message;
   }

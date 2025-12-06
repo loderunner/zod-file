@@ -1,11 +1,11 @@
-[![npm version](https://img.shields.io/npm/v/zod-store)](https://www.npmjs.com/package/zod-store)
-[![CI status](https://github.com/loderunner/zod-store/actions/workflows/lint-test-build.yml/badge.svg)](https://github.com/loderunner/zod-store/actions)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/zod-store)](https://bundlephobia.com/package/zod-store)
-[![license](https://img.shields.io/npm/l/zod-store)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/zod-file)](https://www.npmjs.com/package/zod-file)
+[![CI status](https://github.com/loderunner/zod-file/actions/workflows/lint-test-build.yml/badge.svg)](https://github.com/loderunner/zod-file/actions)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/zod-file)](https://bundlephobia.com/package/zod-file)
+[![license](https://img.shields.io/npm/l/zod-file)](LICENSE)
 [![Ko-fi donate](https://img.shields.io/badge/Ko--fi-donate-ff5f5f?logo=ko-fi&logoColor=white)](https://ko-fi.com/loderunner)
-[![NPM Trusted Publishing](https://img.shields.io/badge/NPM-Trusted%20Publishing-success?logo=npm)](https://www.npmjs.com/package/zod-store#provenance-details-header)
+[![NPM Trusted Publishing](https://img.shields.io/badge/NPM-Trusted%20Publishing-success?logo=npm)](https://www.npmjs.com/package/zod-file#provenance-details-header)
 
-# zod-store
+# zod-file
 
 A type-safe file persistence library with [Zod](https://zod.dev) validation and
 schema migrations for Node.js. Supports JSON out of the box, and YAML and TOML
@@ -28,15 +28,15 @@ with optional dependencies.
 ## Installation
 
 ```bash
-pnpm add zod-store
+pnpm add zod-file
 ```
 
 ```bash
-npm install zod-store
+npm install zod-file
 ```
 
 ```bash
-yarn add zod-store
+yarn add zod-file
 ```
 
 ### YAML Support (Optional)
@@ -61,7 +61,7 @@ pnpm add smol-toml
 
 ```typescript
 import { z } from 'zod';
-import { createZodJSON } from 'zod-store/json';
+import { createZodJSON } from 'zod-file/json';
 
 // Define your schema
 const SettingsSchema = z.object({
@@ -86,7 +86,7 @@ await settings.save({ theme: 'dark', fontSize: 16 }, './settings.json');
 
 ```typescript
 import { z } from 'zod';
-import { createZodYAML } from 'zod-store/yaml';
+import { createZodYAML } from 'zod-file/yaml';
 
 const ConfigSchema = z.object({
   database: z.object({
@@ -112,7 +112,7 @@ await config.save(data, './config.yaml');
 
 ```typescript
 import { z } from 'zod';
-import { createZodTOML } from 'zod-store/toml';
+import { createZodTOML } from 'zod-file/toml';
 
 const ConfigSchema = z.object({
   database: z.object({
@@ -150,7 +150,7 @@ installed.
 Creates a persistence instance for typed TOML files. Requires `smol-toml` to be
 installed.
 
-### `createZodStore(options, serializer)`
+### `createZodFile(options, serializer)`
 
 Creates a persistence instance with a custom serializer. Use this to add support
 for other file formats.
@@ -166,7 +166,7 @@ for other file formats.
 
 #### Returns
 
-A `ZodStore<T>` object with:
+A `ZodFile<T>` object with:
 
 - `load(path, options?)` – Load and validate data from a file
 - `save(data, path, options?)` – Save data to a file
@@ -204,7 +204,7 @@ to handle backward compatibility.
 
 ```typescript
 import { z } from 'zod';
-import { createZodJSON } from 'zod-store/json';
+import { createZodJSON } from 'zod-file/json';
 
 // Version 1 schema (historical)
 const SettingsV1 = z.object({
@@ -276,16 +276,16 @@ When not using versions, the data is saved as-is without wrapping.
 
 ## Error Handling
 
-All errors are thrown as `ZodStoreError` with a specific `code` for programmatic
+All errors are thrown as `ZodFileError` with a specific `code` for programmatic
 handling:
 
 ```typescript
-import { ZodStoreError } from 'zod-store';
+import { ZodFileError } from 'zod-file';
 
 try {
   const data = await settings.load('./settings.json');
 } catch (error) {
-  if (error instanceof ZodStoreError) {
+  if (error instanceof ZodFileError) {
     switch (error.code) {
       case 'FileRead':
         console.error('Could not read file:', error.message);
@@ -319,13 +319,13 @@ The `cause` property contains the original error that triggered the failure.
 This is useful for debugging or extracting detailed validation errors from Zod:
 
 ```typescript
-import { ZodStoreError } from 'zod-store';
+import { ZodFileError } from 'zod-file';
 import { ZodError } from 'zod';
 
 try {
   const data = await settings.load('./settings.json');
 } catch (error) {
-  if (error instanceof ZodStoreError && error.code === 'Validation') {
+  if (error instanceof ZodFileError && error.code === 'Validation') {
     if (error.cause instanceof ZodError) {
       // Access Zod's detailed validation errors
       for (const issue of error.cause.issues) {
@@ -357,7 +357,7 @@ try {
 Create your own serializer to support other file formats:
 
 ```typescript
-import { createZodStore, type Serializer } from 'zod-store';
+import { createZodFile, type Serializer } from 'zod-file';
 
 const tomlSerializer: Serializer = {
   parse(content) {
@@ -369,7 +369,7 @@ const tomlSerializer: Serializer = {
   formatName: 'TOML',
 };
 
-const config = createZodStore({ schema: ConfigSchema }, tomlSerializer);
+const config = createZodFile({ schema: ConfigSchema }, tomlSerializer);
 ```
 
 ### Async Migrations

@@ -3,13 +3,13 @@ import fs from 'node:fs/promises';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { ZodStoreError } from './errors';
+import { ZodFileError } from './errors';
 import { createZodTOML } from './toml';
 
 vi.mock('node:fs/promises');
 const mockFsPromises = vi.mocked(fs);
 
-const testFile = '/tmp/zod-store-test.toml';
+const testFile = '/tmp/zod-file-test.toml';
 
 describe('createZodTOML', () => {
   beforeEach(() => {
@@ -124,8 +124,8 @@ describe('createZodTOML', () => {
 
       mockFsPromises.readFile.mockResolvedValue('invalid toml [[');
 
-      await expect(store.load(testFile)).rejects.toThrow(ZodStoreError);
-      await expect(store.load(testFile)).rejects.toThrowZodStoreError(
+      await expect(store.load(testFile)).rejects.toThrow(ZodFileError);
+      await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'InvalidFormat',
       );
     });

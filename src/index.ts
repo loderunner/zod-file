@@ -1,18 +1,18 @@
 /**
- * zod-store - Type-safe file persistence with Zod validation and schema migrations
+ * zod-file - Type-safe file persistence with Zod validation and schema migrations
  *
- * This module exports core types and the generic {@link createZodStore} factory.
+ * This module exports core types and the generic {@link createZodFile} factory.
  * For format-specific factories, use the subpath exports:
- * - `zod-store/json` for JSON files
- * - `zod-store/yaml` for YAML files (requires `js-yaml` peer dependency)
- * - `zod-store/toml` for TOML files (requires `smol-toml` peer dependency)
+ * - `zod-file/json` for JSON files
+ * - `zod-file/yaml` for YAML files (requires `js-yaml` peer dependency)
+ * - `zod-file/toml` for TOML files (requires `smol-toml` peer dependency)
  *
  * @packageDocumentation
  *
  * @example JSON persistence
  * ```typescript
  * import { z } from 'zod';
- * import { createZodJSON } from 'zod-store/json';
+ * import { createZodJSON } from 'zod-file/json';
  *
  * const SettingsSchema = z.object({
  *   theme: z.enum(['light', 'dark']),
@@ -31,7 +31,7 @@
  * @example YAML persistence (requires js-yaml)
  * ```typescript
  * import { z } from 'zod';
- * import { createZodYAML } from 'zod-store/yaml';
+ * import { createZodYAML } from 'zod-file/yaml';
  *
  * const ConfigSchema = z.object({
  *   database: z.object({
@@ -52,7 +52,7 @@
  * @example TOML persistence (requires smol-toml)
  * ```typescript
  * import { z } from 'zod';
- * import { createZodTOML } from 'zod-store/toml';
+ * import { createZodTOML } from 'zod-file/toml';
  *
  * const ConfigSchema = z.object({
  *   database: z.object({
@@ -76,9 +76,9 @@ export {
   type MigrationStep,
   type SaveOptions,
   type Serializer,
-  type ZodStore,
-  type ZodStoreOptions,
-  createZodStore,
+  type ZodFile,
+  type ZodFileOptions,
+  createZodFile,
 } from './persistence';
 
-export { type ErrorCode, ZodStoreError } from './errors';
+export { type ErrorCode, ZodFileError } from './errors';

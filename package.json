@@ -1,5 +1,5 @@
 {
-  "name": "zod-store",
+  "name": "zod-file",
   "version": "0.0.1",
   "description": "Type-safe file persistence with Zod validation and schema migrations for Node.js. Supports JSON, YAML, and TOML.",
   "keywords": [
@@ -23,11 +23,11 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/loderunner/zod-store.git"
+    "url": "git+https://github.com/loderunner/zod-file.git"
   },
-  "homepage": "https://github.com/loderunner/zod-store#readme",
+  "homepage": "https://github.com/loderunner/zod-file#readme",
   "bugs": {
-    "url": "https://github.com/loderunner/zod-store/issues"
+    "url": "https://github.com/loderunner/zod-file/issues"
   },
   "engines": {
     "node": ">=18.0.0"

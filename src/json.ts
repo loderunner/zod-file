@@ -1,8 +1,8 @@
 import {
   Serializer,
-  ZodStore,
-  ZodStoreOptions,
-  createZodStore,
+  ZodFile,
+  ZodFileOptions,
+  createZodFile,
 } from './persistence';
 
 /**
@@ -22,7 +22,7 @@ export const jsonSerializer: Serializer = {
 };
 
 /**
- * Creates a ZodStore persistence instance for type-safe JSON file operations.
+ * Creates a ZodFile persistence instance for type-safe JSON file operations.
  *
  * The returned instance provides `load` and `save` methods that handle:
  * - Reading and writing JSON files
@@ -33,13 +33,13 @@ export const jsonSerializer: Serializer = {
  * @typeParam V - The current schema version number
  * @typeParam T - The data type produced by the schema
  * @param options - Configuration options for the persistence instance
- * @returns A {@link ZodStore} instance with typed `load` and `save` methods
+ * @returns A {@link ZodFile} instance with typed `load` and `save` methods
  * @throws {Error} If the migration chain is invalid (non-sequential or incomplete)
  *
  * @example Basic usage without versioning
  * ```typescript
  * import { z } from 'zod';
- * import { createZodJSON } from 'zod-store/json';
+ * import { createZodJSON } from 'zod-file/json';
  *
  * const SettingsSchema = z.object({
  *   theme: z.enum(['light', 'dark']),
@@ -62,7 +62,7 @@ export const jsonSerializer: Serializer = {
  * @example Versioned schema with migrations
  * ```typescript
  * import { z } from 'zod';
- * import { createZodJSON } from 'zod-store/json';
+ * import { createZodJSON } from 'zod-file/json';
  *
  * // Historical schema (v1)
  * const SettingsV1 = z.object({ theme: z.string() });
@@ -94,8 +94,8 @@ export const jsonSerializer: Serializer = {
  *
  * @example Error handling
  * ```typescript
- * import { ZodStoreError } from 'zod-store';
- * import { createZodJSON } from 'zod-store/json';
+ * import { ZodFileError } from 'zod-file';
+ * import { createZodJSON } from 'zod-file/json';
  *
  * const settings = createZodJSON({
  *   schema: SettingsSchema,
@@ -106,7 +106,7 @@ export const jsonSerializer: Serializer = {
  *   // throwOnError: true ignores the default and throws instead
  *   const data = await settings.load('./settings.json', { throwOnError: true });
  * } catch (error) {
- *   if (error instanceof ZodStoreError) {
+ *   if (error instanceof ZodFileError) {
  *     console.error(`Error [${error.code}]: ${error.message}`);
  *   }
  * }
@@ -115,6 +115,6 @@ export const jsonSerializer: Serializer = {
 export function createZodJSON<
   V extends number,
   T extends Record<string, unknown>,
->(options: ZodStoreOptions<V, T>): ZodStore<T> {
-  return createZodStore(options, jsonSerializer);
+>(options: ZodFileOptions<V, T>): ZodFile<T> {
+  return createZodFile(options, jsonSerializer);
 }

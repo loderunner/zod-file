@@ -1,17 +1,17 @@
 /**
- * Error codes identifying the failure stage in ZodStore operations.
+ * Error codes identifying the failure stage in ZodFile operations.
  *
  * Use these codes for programmatic error handling to determine what went wrong
  * during load or save operations.
  *
  * @example
  * ```typescript
- * import { ZodStoreError } from 'zod-store';
+ * import { ZodFileError } from 'zod-file';
  *
  * try {
  *   await store.load('./config.json', { throwOnError: true });
  * } catch (error) {
- *   if (error instanceof ZodStoreError) {
+ *   if (error instanceof ZodFileError) {
  *     if (error.code === 'FileRead') {
  *       console.log('File does not exist or is not readable');
  *     } else if (error.code === 'Validation') {
@@ -33,7 +33,7 @@ export type ErrorCode =
   | 'MissingDependency'; // An optional dependency (like js-yaml) is not installed
 
 /**
- * Error thrown by ZodStore operations.
+ * Error thrown by ZodFile operations.
  *
  * The `message` property contains a user-friendly description of the error.
  * The `code` property identifies the failure stage for programmatic handling.
@@ -41,12 +41,12 @@ export type ErrorCode =
  *
  * @example
  * ```typescript
- * import { ZodStoreError } from 'zod-store';
+ * import { ZodFileError } from 'zod-file';
  *
  * try {
  *   await store.load('./config.json', { throwOnError: true });
  * } catch (error) {
- *   if (error instanceof ZodStoreError) {
+ *   if (error instanceof ZodFileError) {
  *     console.error(`[${error.code}] ${error.message}`);
  *     if (error.cause) {
  *       console.error('Caused by:', error.cause);
@@ -55,14 +55,14 @@ export type ErrorCode =
  * }
  * ```
  */
-export class ZodStoreError extends Error {
+export class ZodFileError extends Error {
   /**
    * Error code identifying the failure stage.
    */
   readonly code: ErrorCode;
 
   /**
-   * Creates a new ZodStoreError.
+   * Creates a new ZodFileError.
    *
    * @param code - The error code identifying the failure stage
    * @param message - A user-friendly error message
@@ -70,7 +70,7 @@ export class ZodStoreError extends Error {
    */
   constructor(code: ErrorCode, message: string, cause?: Error) {
     super(message, { cause });
-    this.name = 'ZodStoreError';
+    this.name = 'ZodFileError';
     this.code = code;
   }
 }

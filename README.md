@@ -153,7 +153,9 @@ installed.
 ### `createZodFile(options, serializer)`
 
 Creates a persistence instance with a custom serializer. Use this to add support
-for other file formats.
+for other file formats beyond JSON, YAML, and TOML. See
+[Custom Serializers](#custom-serializers) for details on creating your own
+serializer.
 
 #### Options
 
@@ -163,6 +165,17 @@ for other file formats.
 | `default`    | `T \| () => T`    | No       | Default value or factory when file is missing/invalid        |
 | `version`    | `number`          | No\*     | Current schema version (required if migrations are provided) |
 | `migrations` | `MigrationStep[]` | No       | Array of migration steps                                     |
+
+#### Serializer Interface
+
+When using `createZodFile`, the second argument must implement the `Serializer`
+interface:
+
+| Property     | Type                                          | Description                                         |
+| ------------ | --------------------------------------------- | --------------------------------------------------- |
+| `formatName` | `string`                                      | Human-readable name for error messages (e.g. "INI") |
+| `parse`      | `(content: string) => unknown`                | Parse file content into a JavaScript object         |
+| `stringify`  | `(data: unknown, compact: boolean) => string` | Serialize a JavaScript object to a string           |
 
 #### Returns
 
@@ -354,22 +367,52 @@ try {
 
 ### Custom Serializers
 
-Create your own serializer to support other file formats:
+Create your own serializer to support file formats beyond JSON, YAML, and TOML.
+A serializer handles the conversion between file content (a string) and
+JavaScript objects:
+
+- **`parse(content)`** – Receives the raw file content as a string and returns a
+  JavaScript object. This is called when loading a file. Should throw an error
+  if the content is malformed.
+- **`stringify(data, compact)`** – Receives a JavaScript object and returns a
+  string to write to the file. The `compact` flag indicates whether to minimize
+  whitespace (when `true`) or use pretty-printing (when `false`).
+- **`formatName`** – A human-readable name for the format, used in error
+  messages (e.g. `"File contains invalid INI"`).
+
+Here's an example using [INI files](https://en.wikipedia.org/wiki/INI_file) with
+the [`ini`](https://www.npmjs.com/package/ini) package:
 
 ```typescript
 import { createZodFile, type Serializer } from 'zod-file';
+import { parse, stringify } from 'ini';
+import { z } from 'zod';
 
-const tomlSerializer: Serializer = {
-  parse(content) {
-    return parseToml(content);
+const iniSerializer: Serializer = {
+  formatName: 'INI',
+  parse(content: string): unknown {
+    return parse(content);
   },
-  stringify(data, compact) {
-    return stringifyToml(data);
+  stringify(data: unknown, compact: boolean): string {
+    // INI format doesn't have a standard compact mode
+    return stringify(data as Record<string, unknown>);
   },
-  formatName: 'TOML',
 };
 
-const config = createZodFile({ schema: ConfigSchema }, tomlSerializer);
+const ConfigSchema = z.object({
+  database: z.object({
+    host: z.string(),
+    port: z.coerce.number(), // INI values are strings, coerce to number
+  }),
+});
+
+const config = createZodFile({ schema: ConfigSchema }, iniSerializer);
+
+// Load from an INI file like:
+// [database]
+// host = localhost
+// port = 5432
+const data = await config.load('./config.ini');
 ```
 
 ### Async Migrations

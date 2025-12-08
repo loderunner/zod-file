@@ -14,9 +14,20 @@ vi.mock('node:fs/promises');
 const mockFsPromises = vi.mocked(fs);
 
 /**
+ * Test-only options for verifying serializer option passing.
+ */
+type TestLoadOptions = {
+  testLoadOption?: string;
+};
+
+type TestSaveOptions = {
+  testSaveOption?: number;
+};
+
+/**
  * Simple serializer for testing.
  */
-const mockSerializer: Mocked<Serializer> = {
+const mockSerializer: Mocked<Serializer<TestLoadOptions, TestSaveOptions>> = {
   formatName: 'Test',
   parse: vi.fn(),
   stringify: vi.fn(),
@@ -48,7 +59,7 @@ describe('createZodFile', () => {
       const data = { name: 'Alice', age: 30 };
       await store.save(data, testFile);
 
-      expect(mockSerializer.stringify).toHaveBeenCalledWith(data, false);
+      expect(mockSerializer.stringify).toHaveBeenCalledWith(data, undefined);
       expect(mockFsPromises.writeFile).toHaveBeenCalledWith(
         testFile,
         serializedOutput,
@@ -70,7 +81,7 @@ describe('createZodFile', () => {
 
       const loaded = await store.load(testFile);
       expect(loaded).toEqual({ name: 'Alice', age: 30 });
-      expect(mockSerializer.parse).toHaveBeenCalledWith(fileContent);
+      expect(mockSerializer.parse).toHaveBeenCalledWith(fileContent, undefined);
       expect(mockFsPromises.readFile).toHaveBeenCalledWith(testFile, 'utf-8');
     });
   });
@@ -214,35 +225,120 @@ describe('createZodFile', () => {
     });
   });
 
-  describe('compact option', () => {
-    it('should save with indentation by default', async () => {
-      const schema = z.object({
-        name: z.string(),
+  describe('custom serializer options', () => {
+    describe('load options', () => {
+      it('should pass load options to serializer parse', async () => {
+        const schema = z.object({
+          name: z.string(),
+        });
+
+        const store = createZodFile({ schema }, mockSerializer);
+
+        mockFsPromises.readFile.mockResolvedValue('<file-content>');
+        mockSerializer.parse.mockReturnValue({ name: 'Alice' });
+
+        await store.load(testFile, { testLoadOption: 'test-value' });
+
+        expect(mockSerializer.parse).toHaveBeenCalledWith('<file-content>', {
+          testLoadOption: 'test-value',
+        });
       });
 
-      const store = createZodFile({ schema }, mockSerializer);
+      it('should not pass throwOnError to serializer parse', async () => {
+        const schema = z.object({
+          name: z.string(),
+        });
 
-      await store.save({ name: 'Alice' }, testFile);
+        const store = createZodFile({ schema }, mockSerializer);
 
-      expect(mockSerializer.stringify).toHaveBeenCalledWith(
-        { name: 'Alice' },
-        false,
-      );
+        mockFsPromises.readFile.mockResolvedValue('<file-content>');
+        mockSerializer.parse.mockReturnValue({ name: 'Alice' });
+
+        await store.load(testFile, {
+          throwOnError: true,
+          testLoadOption: 'test-value',
+        });
+
+        expect(mockSerializer.parse).toHaveBeenCalledWith('<file-content>', {
+          testLoadOption: 'test-value',
+        });
+      });
+
+      it('should pass undefined when no load options provided', async () => {
+        const schema = z.object({
+          name: z.string(),
+        });
+
+        const store = createZodFile({ schema }, mockSerializer);
+
+        mockFsPromises.readFile.mockResolvedValue('<file-content>');
+        mockSerializer.parse.mockReturnValue({ name: 'Alice' });
+
+        await store.load(testFile);
+
+        expect(mockSerializer.parse).toHaveBeenCalledWith(
+          '<file-content>',
+          undefined,
+        );
+      });
     });
 
-    it('should save without indentation when compact is true', async () => {
-      const schema = z.object({
-        name: z.string(),
+    describe('save options', () => {
+      it('should pass save options to serializer stringify', async () => {
+        const schema = z.object({
+          name: z.string(),
+        });
+
+        const store = createZodFile({ schema }, mockSerializer);
+
+        await store.save({ name: 'Alice' }, testFile, {
+          testSaveOption: 42,
+        });
+
+        expect(mockSerializer.stringify).toHaveBeenCalledWith(
+          { name: 'Alice' },
+          {
+            testSaveOption: 42,
+          },
+        );
       });
 
-      const store = createZodFile({ schema }, mockSerializer);
+      it('should pass undefined when no save options provided', async () => {
+        const schema = z.object({
+          name: z.string(),
+        });
 
-      await store.save({ name: 'Alice' }, testFile, { compact: true });
+        const store = createZodFile({ schema }, mockSerializer);
 
-      expect(mockSerializer.stringify).toHaveBeenCalledWith(
-        { name: 'Alice' },
-        true,
-      );
+        await store.save({ name: 'Alice' }, testFile);
+
+        expect(mockSerializer.stringify).toHaveBeenCalledWith(
+          { name: 'Alice' },
+          undefined,
+        );
+      });
+
+      it('should pass save options with versioned data', async () => {
+        const schema = z.object({
+          theme: z.string(),
+        });
+
+        const store = createZodFile(
+          { schema, version: 1 as const },
+          mockSerializer,
+        );
+
+        await store.save({ theme: 'dark' }, testFile, {
+          testSaveOption: 99,
+        });
+
+        expect(mockSerializer.stringify).toHaveBeenCalledWith(
+          { _version: 1, theme: 'dark' },
+          {
+            testSaveOption: 99,
+          },
+        );
+      });
     });
   });
 
@@ -261,7 +357,7 @@ describe('createZodFile', () => {
 
       expect(mockSerializer.stringify).toHaveBeenCalledWith(
         { _version: 1, theme: 'dark' },
-        false,
+        undefined,
       );
     });
 
@@ -276,7 +372,7 @@ describe('createZodFile', () => {
 
       expect(mockSerializer.stringify).toHaveBeenCalledWith(
         { theme: 'dark' },
-        false,
+        undefined,
       );
     });
 
@@ -770,7 +866,7 @@ describe('createZodFile', () => {
 
       expect(mockSerializer.stringify).toHaveBeenCalledWith(
         { value: 'test', valid: 'true' },
-        false,
+        undefined,
       );
     });
 

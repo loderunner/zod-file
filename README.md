@@ -169,13 +169,7 @@ serializer.
 #### Serializer Interface
 
 When using `createZodFile`, the second argument must implement the `Serializer`
-interface:
-
-| Property     | Type                                          | Description                                         |
-| ------------ | --------------------------------------------- | --------------------------------------------------- |
-| `formatName` | `string`                                      | Human-readable name for error messages (e.g. "INI") |
-| `parse`      | `(content: string) => unknown`                | Parse file content into a JavaScript object         |
-| `stringify`  | `(data: unknown, compact: boolean) => string` | Serialize a JavaScript object to a string           |
+interface. See [Custom Serializers](#custom-serializers) for details.
 
 #### Returns
 
@@ -206,9 +200,14 @@ Encodes data using the schema and writes it to a file.
 
 #### Options
 
-| Property  | Type      | Default | Description              |
-| --------- | --------- | ------- | ------------------------ |
-| `compact` | `boolean` | `false` | Save without indentation |
+Options are format-specific. For JSON, the following option is available:
+
+| Property  | Type      | Default | Description                          |
+| --------- | --------- | ------- | ------------------------------------ |
+| `compact` | `boolean` | `false` | Save without indentation (JSON only) |
+
+YAML and TOML formats do not support save options. Custom serializers can define
+their own option types.
 
 ## Versioned Schemas and Migrations
 
@@ -367,52 +366,102 @@ try {
 
 ### Custom Serializers
 
-Create your own serializer to support file formats beyond JSON, YAML, and TOML.
-A serializer handles the conversion between file content (a string) and
-JavaScript objects:
+Use `createZodFile` with a custom serializer to support file formats beyond
+JSON, YAML, and TOML. A serializer implements the `Serializer` interface with
+`parse`, `stringify`, and `formatName` properties.
 
-- **`parse(content)`** – Receives the raw file content as a string and returns a
-  JavaScript object. This is called when loading a file. Should throw an error
-  if the content is malformed.
-- **`stringify(data, compact)`** – Receives a JavaScript object and returns a
-  string to write to the file. The `compact` flag indicates whether to minimize
-  whitespace (when `true`) or use pretty-printing (when `false`).
-- **`formatName`** – A human-readable name for the format, used in error
-  messages (e.g. `"File contains invalid INI"`).
-
-Here's an example using [INI files](https://en.wikipedia.org/wiki/INI_file) with
-the [`ini`](https://www.npmjs.com/package/ini) package:
+Here's a simple CSV serializer for key-value pairs:
 
 ```typescript
-import { createZodFile, type Serializer } from 'zod-file';
-import { parse, stringify } from 'ini';
 import { z } from 'zod';
+import { createZodFile } from 'zod-file';
 
-const iniSerializer: Serializer = {
-  formatName: 'INI',
-  parse(content: string): unknown {
-    return parse(content);
+const csvSerializer = {
+  formatName: 'CSV',
+  parse(content) {
+    const result: Record<string, string> = {};
+    for (const line of content.trim().split('\n')) {
+      const [key, value] = line.split(',');
+      result[key] = value;
+    }
+    return result;
   },
-  stringify(data: unknown, compact: boolean): string {
-    // INI format doesn't have a standard compact mode
-    return stringify(data as Record<string, unknown>);
+  stringify(data) {
+    return Object.entries(data as Record<string, string>)
+      .map(([key, value]) => `${key},${value}`)
+      .join('\n');
   },
 };
 
-const ConfigSchema = z.object({
-  database: z.object({
+const schema = z.object({
+  host: z.string(),
+  port: z.string(),
+});
+
+const config = createZodFile({ schema }, csvSerializer);
+
+const data = await config.load('./config.csv');
+await config.save({ host: 'localhost', port: '3000' }, './config.csv');
+```
+
+#### Custom Serializer Options
+
+Serializers can define custom options for parsing and stringifying. The
+`Serializer` type accepts two type parameters: load options and save options.
+
+```typescript
+import { z } from 'zod';
+import { createZodFile } from 'zod-file';
+
+type XMLLoadOptions = {
+  /** Strip XML comments before parsing */
+  stripComments?: boolean;
+};
+
+type XMLSaveOptions = {
+  /** Omit the XML declaration */
+  omitDeclaration?: boolean;
+  /** Indentation string (default: 2 spaces) */
+  indent?: string;
+};
+
+const xmlSerializer = {
+  formatName: 'XML',
+  parse(content: string, options?: XMLLoadOptions): unknown {
+    let xml = content;
+    if (options?.stripComments) {
+      xml = xml.replace(/<!--[\s\S]*?-->/g, '');
+    }
+    // ... parse XML to object
+    return parseXML(xml);
+  },
+  stringify(data: unknown, options?: XMLSaveOptions): string {
+    const indent = options?.indent ?? '  ';
+    const declaration = options?.omitDeclaration
+      ? ''
+      : '<?xml version="1.0"?>\n';
+    // ... convert object to XML
+    return declaration + toXML(data, indent);
+  },
+};
+
+const schema = z.object({
+  server: z.object({
     host: z.string(),
-    port: z.coerce.number(), // INI values are strings, coerce to number
+    port: z.number(),
   }),
 });
 
-const config = createZodFile({ schema: ConfigSchema }, iniSerializer);
+const config = createZodFile({ schema }, xmlSerializer);
 
-// Load from an INI file like:
-// [database]
-// host = localhost
-// port = 5432
-const data = await config.load('./config.ini');
+// Load with custom options
+const data = await config.load('./config.xml', { stripComments: true });
+
+// Save with custom options
+await config.save(data, './config.xml', {
+  omitDeclaration: true,
+  indent: '\t',
+});
 ```
 
 ### Async Migrations
@@ -452,14 +501,6 @@ const settings = createZodJSON({
     lastOpened: new Date().toISOString(),
   }),
 });
-```
-
-### Compact Output
-
-Save without indentation for smaller file sizes:
-
-```typescript
-await settings.save(data, './settings.json', { compact: true });
 ```
 
 ## License

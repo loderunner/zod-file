@@ -12,7 +12,7 @@ const TOMLSerializer: Serializer = {
   parse(content: string): unknown {
     return TOML.parse(content);
   },
-  stringify(data: unknown, _compact: boolean): string {
+  stringify(data: unknown): string {
     return TOML.stringify(data);
   },
 } as const;

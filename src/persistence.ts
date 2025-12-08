@@ -127,6 +127,10 @@ export type ZodFileOptions<
 /**
  * Options for the `load` method.
  *
+ * Combines global options (like `throwOnError`) with serializer-specific options.
+ *
+ * @typeParam TSerializerOpts - Serializer-specific load options
+ *
  * @example
  * ```typescript
  * // Return default on error (default behavior)
@@ -136,7 +140,7 @@ export type ZodFileOptions<
  * const data = await store.load('./config.json', { throwOnError: true });
  * ```
  */
-export type LoadOptions = {
+export type LoadOptions<TSerializerOpts extends object = object> = {
   /**
    * If true, throw errors even when a default value is configured.
    *
@@ -147,28 +151,26 @@ export type LoadOptions = {
    * @defaultValue false
    */
   throwOnError?: boolean;
-};
+} & TSerializerOpts;
 
 /**
  * Options for the `save` method.
+ *
+ * Serializer-specific options are merged with this type.
+ *
+ * @typeParam TSerializerOpts - Serializer-specific save options
  *
  * @example
  * ```typescript
  * // Pretty-printed output (default)
  * await store.save(data, './config.json');
  *
- * // Compact output without indentation
+ * // Compact output without indentation (JSON-specific)
  * await store.save(data, './config.json', { compact: true });
  * ```
  */
-export type SaveOptions = {
-  /**
-   * If true, save without indentation for smaller file size.
-   *
-   * @defaultValue false
-   */
-  compact?: boolean;
-};
+export type SaveOptions<TSerializerOpts extends object = object> =
+  TSerializerOpts & {};
 
 /**
  * A persistence instance for type-safe file operations.
@@ -178,6 +180,8 @@ export type SaveOptions = {
  * Provides methods to load and save data with Zod validation and optional schema migrations.
  *
  * @typeParam T - The data type managed by this instance
+ * @typeParam TLoadOpts - Serializer-specific load options
+ * @typeParam TSaveOpts - Serializer-specific save options
  *
  * @example
  * ```typescript
@@ -193,7 +197,11 @@ export type SaveOptions = {
  * await store.save({ theme: 'dark' }, './settings.json');
  * ```
  */
-export type ZodFile<T> = {
+export type ZodFile<
+  T,
+  TLoadOpts extends object = object,
+  TSaveOpts extends object = object,
+> = {
   /**
    * Loads and validates data from a file.
    *
@@ -205,7 +213,7 @@ export type ZodFile<T> = {
    * @returns The validated data
    * @throws {ZodFileError} When loading fails and no default is configured, or when `throwOnError` is true
    */
-  load(path: string, options?: LoadOptions): Promise<T>;
+  load(path: string, options?: LoadOptions<TLoadOpts>): Promise<T>;
 
   /**
    * Saves data to a file.
@@ -219,7 +227,7 @@ export type ZodFile<T> = {
    * @param options - Save options
    * @throws {ZodFileError} When encoding or writing fails
    */
-  save(data: T, path: string, options?: SaveOptions): Promise<void>;
+  save(data: T, path: string, options?: SaveOptions<TSaveOpts>): Promise<void>;
 };
 
 /**
@@ -228,22 +236,31 @@ export type ZodFile<T> = {
  * Implement this interface to add support for custom file formats.
  * Built-in implementations are available via `zod-file/json`, `zod-file/yaml`, and `zod-file/toml`.
  *
+ * @typeParam TLoadOptions - Options type for the `parse` method
+ * @typeParam TSaveOptions - Options type for the `stringify` method
+ *
  * @example
  * ```typescript
  * import type { Serializer } from 'zod-file';
  *
- * const customSerializer: Serializer = {
+ * type MySaveOptions = { compact?: boolean };
+ *
+ * const customSerializer: Serializer<object, MySaveOptions> = {
  *   parse(content) {
  *     return myCustomParse(content);
  *   },
- *   stringify(data, compact) {
+ *   stringify(data, options) {
+ *     const { compact = false } = options ?? {};
  *     return myCustomStringify(data, { compact });
  *   },
  *   formatName: 'MyFormat',
  * };
  * ```
  */
-export type Serializer = {
+export type Serializer<
+  TLoadOptions extends object = object,
+  TSaveOptions extends object = object,
+> = {
   /**
    * Human-readable format name for error messages (e.g., "JSON", "YAML").
    */
@@ -253,19 +270,20 @@ export type Serializer = {
    * Parses a string into data.
    *
    * @param content - The string content to parse
+   * @param options - Serializer-specific parse options
    * @returns The parsed data
    * @throws When the content is not valid for this format
    */
-  parse(content: string): unknown;
+  parse(content: string, options?: TLoadOptions): unknown;
 
   /**
    * Stringifies data to a string.
    *
    * @param data - The data to stringify
-   * @param compact - Whether to use compact output (no indentation)
+   * @param options - Serializer-specific stringify options
    * @returns The stringified data
    */
-  stringify(data: unknown, compact: boolean): string;
+  stringify(data: unknown, options?: TSaveOptions): string;
 };
 
 /**
@@ -276,6 +294,8 @@ export type Serializer = {
  *
  * @typeParam V - The current schema version number
  * @typeParam T - The data type produced by the schema
+ * @typeParam TLoadOpts - Serializer-specific load options
+ * @typeParam TSaveOpts - Serializer-specific save options
  * @param options - Configuration options for the persistence instance
  * @param serializer - The serializer to use for parsing and stringifying
  * @returns A {@link ZodFile} instance with typed `load` and `save` methods
@@ -285,10 +305,15 @@ export type Serializer = {
  * ```typescript
  * import { createZodFile, type Serializer } from 'zod-file';
  *
- * const mySerializer: Serializer = {
- *   parse: (s) => JSON.parse(s),
- *   stringify: (d, compact) => JSON.stringify(d, null, compact ? 0 : 2),
+ * type MySaveOptions = { compact?: boolean };
+ *
+ * const mySerializer: Serializer<object, MySaveOptions> = {
  *   formatName: 'JSON',
+ *   parse: (s) => JSON.parse(s),
+ *   stringify: (d, opts) => {
+ *     const { compact = false } = opts ?? {};
+ *     return JSON.stringify(d, null, compact ? 0 : 2);
+ *   },
  * };
  *
  * const store = createZodFile({ schema: MySchema }, mySerializer);
@@ -297,7 +322,12 @@ export type Serializer = {
 export function createZodFile<
   V extends number,
   T extends Record<string, unknown>,
->(options: ZodFileOptions<V, T>, serializer: Serializer): ZodFile<T> {
+  TLoadOpts extends object = object,
+  TSaveOpts extends object = object,
+>(
+  options: ZodFileOptions<V, T>,
+  serializer: Serializer<TLoadOpts, TSaveOpts>,
+): ZodFile<T, TLoadOpts, TSaveOpts> {
   const {
     version: currentVersion,
     schema,
@@ -337,7 +367,10 @@ export function createZodFile<
     }
   }
 
-  async function load(filePath: string, loadOptions?: LoadOptions): Promise<T> {
+  async function load(
+    filePath: string,
+    loadOptions?: LoadOptions<TLoadOpts>,
+  ): Promise<T> {
     const { throwOnError = false } = loadOptions ?? {};
 
     // Read file
@@ -358,7 +391,15 @@ export function createZodFile<
     // Parse content
     let parsed: unknown;
     try {
-      parsed = serializer.parse(fileContent);
+      const serializerLoadOpts =
+        loadOptions !== undefined
+          ? (Object.fromEntries(
+              Object.entries(loadOptions).filter(
+                ([key]) => key !== 'throwOnError',
+              ),
+            ) as TLoadOpts)
+          : undefined;
+      parsed = serializer.parse(fileContent, serializerLoadOpts);
     } catch (error) {
       if (throwOnError || defaultValue === undefined) {
         throw new ZodFileError(
@@ -490,10 +531,8 @@ export function createZodFile<
   async function save(
     data: T,
     filePath: string,
-    saveOptions?: SaveOptions,
+    saveOptions?: SaveOptions<TSaveOpts>,
   ): Promise<void> {
-    const { compact = false } = saveOptions ?? {};
-
     // Encode data with schema (for codec support)
     // Use encodeAsync to support async transforms
     let encoded: unknown;
@@ -521,7 +560,8 @@ export function createZodFile<
         : encoded;
 
     // Stringify data
-    const content = serializer.stringify(fileData, compact);
+    const serializerSaveOpts = saveOptions;
+    const content = serializer.stringify(fileData, serializerSaveOpts);
 
     // Write file
     try {

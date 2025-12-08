@@ -6,17 +6,30 @@ import {
 } from './persistence';
 
 /**
+ * Options for JSON serialization.
+ */
+export type JSONSaveOptions = {
+  /**
+   * If true, save without indentation for smaller file size.
+   *
+   * @defaultValue false
+   */
+  compact?: boolean;
+};
+
+/**
  * Built-in JSON serializer.
  *
  * Uses `JSON.parse` and `JSON.stringify` with 2-space indentation
  * for pretty output, or no indentation when compact is true.
  */
-export const jsonSerializer: Serializer = {
+export const jsonSerializer: Serializer<object, JSONSaveOptions> = {
   formatName: 'JSON',
   parse(content: string): unknown {
     return JSON.parse(content);
   },
-  stringify(data: unknown, compact: boolean): string {
+  stringify(data: unknown, options?: JSONSaveOptions): string {
+    const { compact = false } = options ?? {};
     return compact ? JSON.stringify(data) : JSON.stringify(data, null, 2);
   },
 };
@@ -111,10 +124,24 @@ export const jsonSerializer: Serializer = {
  *   }
  * }
  * ```
+ *
+ * @example Compact output
+ * ```typescript
+ * import { createZodJSON } from 'zod-file/json';
+ *
+ * const settings = createZodJSON({
+ *   schema: SettingsSchema,
+ * });
+ *
+ * // Save with compact formatting (no indentation)
+ * await settings.save({ theme: 'dark', fontSize: 16 }, './settings.json', {
+ *   compact: true,
+ * });
+ * ```
  */
 export function createZodJSON<
   V extends number,
   T extends Record<string, unknown>,
->(options: ZodFileOptions<V, T>): ZodFile<T> {
+>(options: ZodFileOptions<V, T>): ZodFile<T, object, JSONSaveOptions> {
   return createZodFile(options, jsonSerializer);
 }

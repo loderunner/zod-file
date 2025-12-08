@@ -12,12 +12,8 @@ const YAMLSerializer: Serializer = {
   parse(content: string): unknown {
     return YAML.load(content);
   },
-  stringify(data: unknown, compact: boolean): string {
-    return YAML.dump(data, {
-      indent: compact ? 0 : 2,
-      flowLevel: compact ? 0 : -1,
-      lineWidth: compact ? -1 : 80,
-    }).trimEnd();
+  stringify(data: unknown): string {
+    return YAML.dump(data, { indent: 2 }).trimEnd();
   },
 } as const;
 

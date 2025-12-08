@@ -114,30 +114,6 @@ describe('createZodYAML', () => {
       expect(writtenContent).toContain('name:');
       expect(writtenContent).toContain('  value:');
     });
-
-    it('should save compact YAML when compact option is true', async () => {
-      const schema = z.object({
-        name: z.string(),
-        age: z.number(),
-        nested: z.object({
-          value: z.string(),
-        }),
-      });
-
-      const store = createZodYAML({ schema });
-
-      await store.save(
-        { name: 'Alice', age: 30, nested: { value: 'test' } },
-        testFile,
-        { compact: true },
-      );
-
-      expect(mockFsPromises.writeFile).toHaveBeenCalledTimes(1);
-      const writtenContent = mockFsPromises.writeFile.mock
-        .calls[0]?.[1] as string;
-
-      expect(writtenContent).not.toContain('\n');
-    });
   });
 
   describe('YAML parsing errors', () => {

@@ -29,8 +29,8 @@ type TestSaveOptions = {
  */
 const mockSerializer: Mocked<Serializer<TestLoadOptions, TestSaveOptions>> = {
   formatName: 'Test',
-  parse: vi.fn(),
-  stringify: vi.fn(),
+  decode: vi.fn(),
+  encode: vi.fn(),
 };
 
 const testFile = '/tmp/zod-file-test.json';
@@ -54,16 +54,18 @@ describe('createZodFile', () => {
 
       const store = createZodFile({ schema }, mockSerializer);
 
-      const serializedOutput = '<serialized-output-save-test-1>';
-      mockSerializer.stringify.mockReturnValue(serializedOutput);
+      const serializedOutput = Buffer.from(
+        '<serialized-output-save-test-1>',
+        'utf-8',
+      );
+      mockSerializer.encode.mockReturnValue(serializedOutput);
       const data = { name: 'Alice', age: 30 };
       await store.save(data, testFile);
 
-      expect(mockSerializer.stringify).toHaveBeenCalledWith(data, undefined);
+      expect(mockSerializer.encode).toHaveBeenCalledWith(data, undefined);
       expect(mockFsPromises.writeFile).toHaveBeenCalledWith(
         testFile,
         serializedOutput,
-        'utf-8',
       );
     });
 
@@ -75,14 +77,17 @@ describe('createZodFile', () => {
 
       const store = createZodFile({ schema }, mockSerializer);
 
-      const fileContent = '<file-content-load-test-1>';
+      const fileContent = Buffer.from('<file-content-load-test-1>', 'utf-8');
       mockFsPromises.readFile.mockResolvedValue(fileContent);
-      mockSerializer.parse.mockReturnValue({ name: 'Alice', age: 30 });
+      mockSerializer.decode.mockReturnValue({ name: 'Alice', age: 30 });
 
       const loaded = await store.load(testFile);
       expect(loaded).toEqual({ name: 'Alice', age: 30 });
-      expect(mockSerializer.parse).toHaveBeenCalledWith(fileContent, undefined);
-      expect(mockFsPromises.readFile).toHaveBeenCalledWith(testFile, 'utf-8');
+      expect(mockSerializer.decode).toHaveBeenCalledWith(
+        fileContent,
+        undefined,
+      );
+      expect(mockFsPromises.readFile).toHaveBeenCalledWith(testFile);
     });
   });
 
@@ -115,8 +120,10 @@ describe('createZodFile', () => {
         mockSerializer,
       );
 
-      mockFsPromises.readFile.mockResolvedValue('<invalid-format-default-1>');
-      mockSerializer.parse.mockImplementation(() => {
+      mockFsPromises.readFile.mockResolvedValue(
+        Buffer.from('<invalid-format-default-1>', 'utf-8'),
+      );
+      mockSerializer.decode.mockImplementation(() => {
         throw new Error('Invalid format');
       });
 
@@ -136,9 +143,9 @@ describe('createZodFile', () => {
       );
 
       mockFsPromises.readFile.mockResolvedValue(
-        '<file-content-default-schema-1>',
+        Buffer.from('<file-content-default-schema-1>', 'utf-8'),
       );
-      mockSerializer.parse.mockReturnValue({ invalid: 'data' });
+      mockSerializer.decode.mockReturnValue({ invalid: 'data' });
 
       const loaded = await store.load(testFile);
       expect(loaded).toEqual(defaultData);
@@ -214,8 +221,10 @@ describe('createZodFile', () => {
         mockSerializer,
       );
 
-      mockFsPromises.readFile.mockResolvedValue('<invalid-format-default-1>');
-      mockSerializer.parse.mockImplementation(() => {
+      mockFsPromises.readFile.mockResolvedValue(
+        Buffer.from('<invalid-format-default-1>', 'utf-8'),
+      );
+      mockSerializer.decode.mockImplementation(() => {
         throw new Error('Invalid format');
       });
 
@@ -234,12 +243,13 @@ describe('createZodFile', () => {
 
         const store = createZodFile({ schema }, mockSerializer);
 
-        mockFsPromises.readFile.mockResolvedValue('<file-content>');
-        mockSerializer.parse.mockReturnValue({ name: 'Alice' });
+        const fileContent = Buffer.from('<file-content>', 'utf-8');
+        mockFsPromises.readFile.mockResolvedValue(fileContent);
+        mockSerializer.decode.mockReturnValue({ name: 'Alice' });
 
         await store.load(testFile, { testLoadOption: 'test-value' });
 
-        expect(mockSerializer.parse).toHaveBeenCalledWith('<file-content>', {
+        expect(mockSerializer.decode).toHaveBeenCalledWith(fileContent, {
           testLoadOption: 'test-value',
         });
       });
@@ -251,15 +261,16 @@ describe('createZodFile', () => {
 
         const store = createZodFile({ schema }, mockSerializer);
 
-        mockFsPromises.readFile.mockResolvedValue('<file-content>');
-        mockSerializer.parse.mockReturnValue({ name: 'Alice' });
+        const fileContent = Buffer.from('<file-content>', 'utf-8');
+        mockFsPromises.readFile.mockResolvedValue(fileContent);
+        mockSerializer.decode.mockReturnValue({ name: 'Alice' });
 
         await store.load(testFile, {
           throwOnError: true,
           testLoadOption: 'test-value',
         });
 
-        expect(mockSerializer.parse).toHaveBeenCalledWith('<file-content>', {
+        expect(mockSerializer.decode).toHaveBeenCalledWith(fileContent, {
           testLoadOption: 'test-value',
         });
       });
@@ -271,13 +282,14 @@ describe('createZodFile', () => {
 
         const store = createZodFile({ schema }, mockSerializer);
 
-        mockFsPromises.readFile.mockResolvedValue('<file-content>');
-        mockSerializer.parse.mockReturnValue({ name: 'Alice' });
+        const fileContent = Buffer.from('<file-content>', 'utf-8');
+        mockFsPromises.readFile.mockResolvedValue(fileContent);
+        mockSerializer.decode.mockReturnValue({ name: 'Alice' });
 
         await store.load(testFile);
 
-        expect(mockSerializer.parse).toHaveBeenCalledWith(
-          '<file-content>',
+        expect(mockSerializer.decode).toHaveBeenCalledWith(
+          fileContent,
           undefined,
         );
       });
@@ -295,7 +307,7 @@ describe('createZodFile', () => {
           testSaveOption: 42,
         });
 
-        expect(mockSerializer.stringify).toHaveBeenCalledWith(
+        expect(mockSerializer.encode).toHaveBeenCalledWith(
           { name: 'Alice' },
           {
             testSaveOption: 42,
@@ -312,7 +324,7 @@ describe('createZodFile', () => {
 
         await store.save({ name: 'Alice' }, testFile);
 
-        expect(mockSerializer.stringify).toHaveBeenCalledWith(
+        expect(mockSerializer.encode).toHaveBeenCalledWith(
           { name: 'Alice' },
           undefined,
         );
@@ -332,7 +344,7 @@ describe('createZodFile', () => {
           testSaveOption: 99,
         });
 
-        expect(mockSerializer.stringify).toHaveBeenCalledWith(
+        expect(mockSerializer.encode).toHaveBeenCalledWith(
           { _version: 1, theme: 'dark' },
           {
             testSaveOption: 99,
@@ -355,7 +367,7 @@ describe('createZodFile', () => {
 
       await store.save({ theme: 'dark' }, testFile);
 
-      expect(mockSerializer.stringify).toHaveBeenCalledWith(
+      expect(mockSerializer.encode).toHaveBeenCalledWith(
         { _version: 1, theme: 'dark' },
         undefined,
       );
@@ -370,7 +382,7 @@ describe('createZodFile', () => {
 
       await store.save({ theme: 'dark' }, testFile);
 
-      expect(mockSerializer.stringify).toHaveBeenCalledWith(
+      expect(mockSerializer.encode).toHaveBeenCalledWith(
         { theme: 'dark' },
         undefined,
       );
@@ -386,8 +398,10 @@ describe('createZodFile', () => {
         mockSerializer,
       );
 
-      mockFsPromises.readFile.mockResolvedValue('<file-content-versioned-1>');
-      mockSerializer.parse.mockReturnValue({ _version: 1, theme: 'dark' });
+      mockFsPromises.readFile.mockResolvedValue(
+        Buffer.from('<file-content-versioned-1>', 'utf-8'),
+      );
+      mockSerializer.decode.mockReturnValue({ _version: 1, theme: 'dark' });
 
       const loaded = await store.load(testFile);
 
@@ -405,9 +419,9 @@ describe('createZodFile', () => {
       );
 
       mockFsPromises.readFile.mockResolvedValue(
-        '<file-content-version-missing-1>',
+        Buffer.from('<file-content-version-missing-1>', 'utf-8'),
       );
-      mockSerializer.parse.mockReturnValue({ theme: 'dark' });
+      mockSerializer.decode.mockReturnValue({ theme: 'dark' });
 
       await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'InvalidVersion',
@@ -425,9 +439,9 @@ describe('createZodFile', () => {
       );
 
       mockFsPromises.readFile.mockResolvedValue(
-        '<file-content-version-string-1>',
+        Buffer.from('<file-content-version-string-1>', 'utf-8'),
       );
-      mockSerializer.parse.mockReturnValue({
+      mockSerializer.decode.mockReturnValue({
         _version: 'invalid',
         theme: 'dark',
       });
@@ -448,9 +462,9 @@ describe('createZodFile', () => {
       );
 
       mockFsPromises.readFile.mockResolvedValue(
-        '<file-content-version-float-1>',
+        Buffer.from('<file-content-version-float-1>', 'utf-8'),
       );
-      mockSerializer.parse.mockReturnValue({ _version: 1.5, theme: 'dark' });
+      mockSerializer.decode.mockReturnValue({ _version: 1.5, theme: 'dark' });
 
       await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'InvalidVersion',
@@ -468,9 +482,9 @@ describe('createZodFile', () => {
       );
 
       mockFsPromises.readFile.mockResolvedValue(
-        '<file-content-version-zero-1>',
+        Buffer.from('<file-content-version-zero-1>', 'utf-8'),
       );
-      mockSerializer.parse.mockReturnValue({ _version: 0, theme: 'dark' });
+      mockSerializer.decode.mockReturnValue({ _version: 0, theme: 'dark' });
 
       await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'InvalidVersion',
@@ -488,9 +502,9 @@ describe('createZodFile', () => {
       );
 
       mockFsPromises.readFile.mockResolvedValue(
-        '<file-content-version-future-1>',
+        Buffer.from('<file-content-version-future-1>', 'utf-8'),
       );
-      mockSerializer.parse.mockReturnValue({ _version: 2, theme: 'dark' });
+      mockSerializer.decode.mockReturnValue({ _version: 2, theme: 'dark' });
 
       await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'UnsupportedVersion',
@@ -529,7 +543,7 @@ describe('createZodFile', () => {
         mockSerializer,
       );
 
-      mockSerializer.parse.mockReturnValue({ _version: 1, theme: 'dark' });
+      mockSerializer.decode.mockReturnValue({ _version: 1, theme: 'dark' });
 
       const loaded = await store.load(testFile);
       expect(migration.migrate).toHaveBeenCalledWith({ theme: 'dark' });
@@ -585,7 +599,7 @@ describe('createZodFile', () => {
         mockSerializer,
       );
 
-      mockSerializer.parse.mockReturnValue({ _version: 1, theme: 'dark' });
+      mockSerializer.decode.mockReturnValue({ _version: 1, theme: 'dark' });
 
       const loaded = await store.load(testFile);
       expect(migration1.migrate).toHaveBeenCalledWith({ theme: 'dark' });
@@ -631,9 +645,9 @@ describe('createZodFile', () => {
       );
 
       mockFsPromises.readFile.mockResolvedValue(
-        '<file-content-migration-async-1>',
+        Buffer.from('<file-content-migration-async-1>', 'utf-8'),
       );
-      mockSerializer.parse.mockReturnValue({ _version: 1, theme: 'dark' });
+      mockSerializer.decode.mockReturnValue({ _version: 1, theme: 'dark' });
 
       const loaded = await store.load(testFile);
       expect(loaded.theme).toBe('dark');
@@ -759,7 +773,7 @@ describe('createZodFile', () => {
       );
 
       // File has invalid data for v1 schema
-      mockSerializer.parse.mockReturnValue({ _version: 1, invalid: 'data' });
+      mockSerializer.decode.mockReturnValue({ _version: 1, invalid: 'data' });
 
       await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'Migration',
@@ -794,7 +808,7 @@ describe('createZodFile', () => {
         mockSerializer,
       );
 
-      mockSerializer.parse.mockReturnValue({ _version: 1, theme: 'dark' });
+      mockSerializer.decode.mockReturnValue({ _version: 1, theme: 'dark' });
 
       await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'Migration',
@@ -831,7 +845,7 @@ describe('createZodFile', () => {
         mockSerializer,
       );
 
-      mockSerializer.parse.mockReturnValue({ _version: 1, theme: 'dark' });
+      mockSerializer.decode.mockReturnValue({ _version: 1, theme: 'dark' });
 
       const loaded = await store.load(testFile);
       expect(loaded).toEqual(defaultData);
@@ -847,7 +861,10 @@ describe('createZodFile', () => {
 
       const store = createZodFile({ schema }, mockSerializer);
 
-      mockSerializer.parse.mockReturnValue({ theme: 'invalid', fontSize: 100 });
+      mockSerializer.decode.mockReturnValue({
+        theme: 'invalid',
+        fontSize: 100,
+      });
 
       await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'Validation',
@@ -864,7 +881,7 @@ describe('createZodFile', () => {
 
       await store.save({ value: 'test', valid: true }, testFile);
 
-      expect(mockSerializer.stringify).toHaveBeenCalledWith(
+      expect(mockSerializer.encode).toHaveBeenCalledWith(
         { value: 'test', valid: 'true' },
         undefined,
       );
@@ -878,7 +895,7 @@ describe('createZodFile', () => {
 
       const store = createZodFile({ schema }, mockSerializer);
 
-      mockSerializer.parse.mockReturnValue({ value: 'test', valid: 'YES' });
+      mockSerializer.decode.mockReturnValue({ value: 'test', valid: 'YES' });
       const loaded = await store.load(testFile);
 
       expect(loaded).toStrictEqual({ value: 'test', valid: true });
@@ -913,7 +930,7 @@ describe('createZodFile', () => {
 
       const store = createZodFile({ schema }, mockSerializer);
 
-      mockSerializer.parse.mockReturnValue({ value: 6 });
+      mockSerializer.decode.mockReturnValue({ value: 6 });
 
       await expect(store.load(testFile)).rejects.toThrowZodFileError(
         'Validation',
@@ -968,9 +985,9 @@ describe('createZodFile', () => {
       const store = createZodFile({ schema }, mockSerializer);
 
       mockFsPromises.readFile.mockResolvedValue(
-        '<file-content-validation-details-1>',
+        Buffer.from('<file-content-validation-details-1>', 'utf-8'),
       );
-      mockSerializer.parse.mockReturnValue({
+      mockSerializer.decode.mockReturnValue({
         theme: 'invalid',
         fontSize: 'not a number',
       });
@@ -993,8 +1010,10 @@ describe('createZodFile', () => {
       const schema = z.object({});
       const store = createZodFile({ schema }, mockSerializer);
 
-      mockFsPromises.readFile.mockResolvedValue('<file-content-empty-obj-1>');
-      mockSerializer.parse.mockReturnValue({});
+      mockFsPromises.readFile.mockResolvedValue(
+        Buffer.from('<file-content-empty-obj-1>', 'utf-8'),
+      );
+      mockSerializer.decode.mockReturnValue({});
 
       await store.save({}, testFile);
       const loaded = await store.load(testFile);

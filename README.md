@@ -368,7 +368,7 @@ try {
 
 Use `createZodFile` with a custom serializer to support file formats beyond
 JSON, YAML, and TOML. A serializer implements the `Serializer` interface with
-`parse`, `stringify`, and `formatName` properties.
+`encode`, `decode`, and `formatName` properties.
 
 Here's a simple CSV serializer for key-value pairs:
 
@@ -378,18 +378,20 @@ import { createZodFile } from 'zod-file';
 
 const csvSerializer = {
   formatName: 'CSV',
-  parse(content) {
+  decode(content: Buffer) {
+    const text = content.toString('utf-8');
     const result: Record<string, string> = {};
-    for (const line of content.trim().split('\n')) {
+    for (const line of text.trim().split('\n')) {
       const [key, value] = line.split(',');
       result[key] = value;
     }
     return result;
   },
-  stringify(data) {
-    return Object.entries(data as Record<string, string>)
+  encode(data: unknown): Buffer {
+    const text = Object.entries(data as Record<string, string>)
       .map(([key, value]) => `${key},${value}`)
       .join('\n');
+    return Buffer.from(text, 'utf-8');
   },
 };
 
@@ -406,7 +408,7 @@ await config.save({ host: 'localhost', port: '3000' }, './config.csv');
 
 #### Custom Serializer Options
 
-Serializers can define custom options for parsing and stringifying. The
+Serializers can define custom options for decoding and encoding. The
 `Serializer` type accepts two type parameters: load options and save options.
 
 ```typescript
@@ -414,7 +416,7 @@ import { z } from 'zod';
 import { createZodFile } from 'zod-file';
 
 type XMLLoadOptions = {
-  /** Strip XML comments before parsing */
+  /** Strip XML comments before decoding */
   stripComments?: boolean;
 };
 
@@ -427,21 +429,22 @@ type XMLSaveOptions = {
 
 const xmlSerializer = {
   formatName: 'XML',
-  parse(content: string, options?: XMLLoadOptions): unknown {
-    let xml = content;
+  decode(content, options?: XMLLoadOptions) {
+    let xml = content.toString('utf-8');
     if (options?.stripComments) {
       xml = xml.replace(/<!--[\s\S]*?-->/g, '');
     }
-    // ... parse XML to object
-    return parseXML(xml);
+    // ... decode XML to object
+    return decodeXML(xml);
   },
-  stringify(data: unknown, options?: XMLSaveOptions): string {
+  encode(data, options?: XMLSaveOptions) {
     const indent = options?.indent ?? '  ';
     const declaration = options?.omitDeclaration
       ? ''
       : '<?xml version="1.0"?>\n';
     // ... convert object to XML
-    return declaration + toXML(data, indent);
+    const xml = declaration + toXML(data, indent);
+    return Buffer.from(xml, 'utf-8');
   },
 };
 

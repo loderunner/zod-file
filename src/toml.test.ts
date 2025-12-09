@@ -28,8 +28,9 @@ describe('createZodTOML', () => {
       await store.save({ name: 'Alice', age: 30 }, testFile);
 
       expect(mockFsPromises.writeFile).toHaveBeenCalledTimes(1);
-      const writtenContent = mockFsPromises.writeFile.mock
-        .calls[0]?.[1] as string;
+      const writtenContent = (
+        mockFsPromises.writeFile.mock.calls[0]?.[1] as Buffer
+      ).toString('utf-8');
 
       // Verify it's valid TOML by parsing it
       const TOML = await import('smol-toml');
@@ -105,8 +106,9 @@ describe('createZodTOML', () => {
       );
 
       expect(mockFsPromises.writeFile).toHaveBeenCalledTimes(1);
-      const writtenContent = mockFsPromises.writeFile.mock
-        .calls[0]?.[1] as string;
+      const writtenContent = (
+        mockFsPromises.writeFile.mock.calls[0]?.[1] as Buffer
+      ).toString('utf-8');
 
       expect(writtenContent).toContain('\n');
       expect(writtenContent).toContain('name');

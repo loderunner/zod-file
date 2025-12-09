@@ -9,11 +9,12 @@ import {
 
 const YAMLSerializer: Serializer = {
   formatName: 'YAML',
-  parse(content: string): unknown {
-    return YAML.load(content);
+  decode(content: Buffer): unknown {
+    return YAML.load(content.toString('utf-8'));
   },
-  stringify(data: unknown): string {
-    return YAML.dump(data, { indent: 2 }).trimEnd();
+  encode(data: unknown): Buffer {
+    const str = YAML.dump(data, { indent: 2 }).trimEnd();
+    return Buffer.from(str, 'utf-8');
   },
 } as const;
 

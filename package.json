@@ -1,6 +1,6 @@
 {
   "name": "zod-file",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Type-safe file persistence with Zod validation and schema migrations for Node.js. Supports JSON, YAML, and TOML.",
   "keywords": [
     "zod",

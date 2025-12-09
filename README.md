@@ -11,8 +11,6 @@ A type-safe file persistence library with [Zod](https://zod.dev) validation and
 schema migrations for Node.js. Supports JSON out of the box, and YAML and TOML
 with optional dependencies.
 
-## Features
-
 - **Type-safe persistence** – Load and save files with full TypeScript type
   inference
 - **Multiple formats** – JSON built-in, YAML with optional `js-yaml` dependency,
@@ -24,6 +22,32 @@ with optional dependencies.
   configurable defaults
 - **Codec support** – Works with Zod's `encodeAsync` for custom serialization
   transforms
+
+- [Installation](#installation)
+  - [YAML Support (Optional)](#yaml-support-optional)
+  - [TOML Support (Optional)](#toml-support-optional)
+- [Quick Start](#quick-start)
+  - [JSON](#json)
+  - [YAML](#yaml)
+  - [TOML](#toml)
+- [API](#api)
+  - [`createZodJSON(options)`](#createzodjsonoptions)
+  - [`createZodYAML(options)`](#createzodyamloptions)
+  - [`createZodTOML(options)`](#createzodtomloptions)
+  - [`createZodFile(options, serializer)`](#createzodfileoptions-serializer)
+  - [`load(path, options?)`](#loadpath-options)
+  - [`save(data, path, options?)`](#savedata-path-options)
+- [Versioned Schemas and Migrations](#versioned-schemas-and-migrations)
+  - [Migration Rules](#migration-rules)
+  - [File Format](#file-format)
+- [Error Handling](#error-handling)
+  - [Accessing the Underlying Error](#accessing-the-underlying-error)
+  - [Error Codes](#error-codes)
+- [Advanced Usage](#advanced-usage)
+  - [Custom Serializers](#custom-serializers)
+  - [Async Migrations](#async-migrations)
+  - [Default Value Factory](#default-value-factory)
+- [License](#license)
 
 ## Installation
 

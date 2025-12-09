@@ -1,5 +1,5 @@
 [![npm version](https://img.shields.io/npm/v/zod-file)](https://www.npmjs.com/package/zod-file)
-[![CI status](https://github.com/loderunner/zod-file/actions/workflows/lint-test-build.yml/badge.svg)](https://github.com/loderunner/zod-file/actions)
+[![CI](https://github.com/loderunner/zod-file/actions/workflows/ci.yml/badge.svg)](https://github.com/loderunner/zod-file/actions/workflows/ci.yml)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/zod-file)](https://bundlephobia.com/package/zod-file)
 [![license](https://img.shields.io/npm/l/zod-file)](LICENSE)
 [![Ko-fi donate](https://img.shields.io/badge/Ko--fi-donate-ff5f5f?logo=ko-fi&logoColor=white)](https://ko-fi.com/loderunner)

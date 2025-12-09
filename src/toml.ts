@@ -9,11 +9,12 @@ import {
 
 const TOMLSerializer: Serializer = {
   formatName: 'TOML',
-  parse(content: string): unknown {
-    return TOML.parse(content);
+  decode(content: Buffer): unknown {
+    return TOML.parse(content.toString('utf-8'));
   },
-  stringify(data: unknown): string {
-    return TOML.stringify(data);
+  encode(data: unknown): Buffer {
+    const str = TOML.stringify(data);
+    return Buffer.from(str, 'utf-8');
   },
 } as const;
 

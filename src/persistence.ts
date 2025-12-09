@@ -231,29 +231,29 @@ export type ZodFile<
 };
 
 /**
- * A serializer that converts between data and string representation.
+ * A serializer that converts between data and file content.
  *
  * Implement this interface to add support for custom file formats.
  * Built-in implementations are available via `zod-file/json`, `zod-file/yaml`, and `zod-file/toml`.
  *
- * @typeParam TLoadOptions - Options type for the `parse` method
- * @typeParam TSaveOptions - Options type for the `stringify` method
+ * @typeParam TLoadOptions - Options type for the `decode` method
+ * @typeParam TSaveOptions - Options type for the `encode` method
  *
  * @example
  * ```typescript
  * import type { Serializer } from 'zod-file';
  *
- * type MySaveOptions = { compact?: boolean };
+ * type LoadOptions = { strict?: boolean };
+ * type SaveOptions = { header?: string };
  *
- * const customSerializer: Serializer<object, MySaveOptions> = {
- *   parse(content) {
- *     return myCustomParse(content);
- *   },
- *   stringify(data, options) {
- *     const { compact = false } = options ?? {};
- *     return myCustomStringify(data, { compact });
- *   },
+ * const customSerializer = {
  *   formatName: 'MyFormat',
+ *   decode(content: Buffer, options?: LoadOptions) {
+ *     // ... decode Buffer to object
+ *   },
+ *   encode(data: unknown, options?: SaveOptions): Buffer {
+ *     // ... encode object to Buffer
+ *   },
  * };
  * ```
  */
@@ -267,23 +267,23 @@ export type Serializer<
   formatName: string;
 
   /**
-   * Parses a string into data.
+   * Decodes file content into data.
    *
-   * @param content - The string content to parse
-   * @param options - Serializer-specific parse options
-   * @returns The parsed data
+   * @param content - The raw file content to decode
+   * @param options - Serializer-specific decode options
+   * @returns The decoded data
    * @throws When the content is not valid for this format
    */
-  parse(content: string, options?: TLoadOptions): unknown;
+  decode(content: Buffer, options?: TLoadOptions): unknown;
 
   /**
-   * Stringifies data to a string.
+   * Encodes data to file content.
    *
-   * @param data - The data to stringify
-   * @param options - Serializer-specific stringify options
-   * @returns The stringified data
+   * @param data - The data to encode
+   * @param options - Serializer-specific encode options
+   * @returns The encoded file content
    */
-  stringify(data: unknown, options?: TSaveOptions): string;
+  encode(data: unknown, options?: TSaveOptions): Buffer;
 };
 
 /**
@@ -297,7 +297,7 @@ export type Serializer<
  * @typeParam TLoadOpts - Serializer-specific load options
  * @typeParam TSaveOpts - Serializer-specific save options
  * @param options - Configuration options for the persistence instance
- * @param serializer - The serializer to use for parsing and stringifying
+ * @param serializer - The serializer to use for encoding and decoding
  * @returns A {@link ZodFile} instance with typed `load` and `save` methods
  * @throws {Error} If the migration chain is invalid (non-sequential or incomplete)
  *
@@ -309,10 +309,11 @@ export type Serializer<
  *
  * const mySerializer: Serializer<object, MySaveOptions> = {
  *   formatName: 'JSON',
- *   parse: (s) => JSON.parse(s),
- *   stringify: (d, opts) => {
+ *   decode: (content) => JSON.parse(content.toString('utf-8')),
+ *   encode: (data, opts) => {
  *     const { compact = false } = opts ?? {};
- *     return JSON.stringify(d, null, compact ? 0 : 2);
+ *     const str = JSON.stringify(data, null, compact ? 0 : 2);
+ *     return Buffer.from(str, 'utf-8');
  *   },
  * };
  *
@@ -374,9 +375,9 @@ export function createZodFile<
     const { throwOnError = false } = loadOptions ?? {};
 
     // Read file
-    let fileContent: string;
+    let fileContent: Buffer;
     try {
-      fileContent = await fs.readFile(filePath, 'utf-8');
+      fileContent = await fs.readFile(filePath);
     } catch (error) {
       if (throwOnError || defaultValue === undefined) {
         throw new ZodFileError(
@@ -388,7 +389,7 @@ export function createZodFile<
       return getDefault();
     }
 
-    // Parse content
+    // Decode content
     let parsed: unknown;
     try {
       const serializerLoadOpts =
@@ -399,7 +400,7 @@ export function createZodFile<
               ),
             ) as TLoadOpts)
           : undefined;
-      parsed = serializer.parse(fileContent, serializerLoadOpts);
+      parsed = serializer.decode(fileContent, serializerLoadOpts);
     } catch (error) {
       if (throwOnError || defaultValue === undefined) {
         throw new ZodFileError(
@@ -559,13 +560,13 @@ export function createZodFile<
           }
         : encoded;
 
-    // Stringify data
+    // Encode data
     const serializerSaveOpts = saveOptions;
-    const content = serializer.stringify(fileData, serializerSaveOpts);
+    const content = serializer.encode(fileData, serializerSaveOpts);
 
     // Write file
     try {
-      await fs.writeFile(filePath, content, 'utf-8');
+      await fs.writeFile(filePath, content);
     } catch (error) {
       throw new ZodFileError(
         'FileWrite',

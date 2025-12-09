@@ -25,12 +25,13 @@ export type JSONSaveOptions = {
  */
 export const jsonSerializer: Serializer<object, JSONSaveOptions> = {
   formatName: 'JSON',
-  parse(content: string): unknown {
-    return JSON.parse(content);
+  decode(content: Buffer): unknown {
+    return JSON.parse(content.toString('utf-8'));
   },
-  stringify(data: unknown, options?: JSONSaveOptions): string {
+  encode(data: unknown, options?: JSONSaveOptions): Buffer {
     const { compact = false } = options ?? {};
-    return compact ? JSON.stringify(data) : JSON.stringify(data, null, 2);
+    const str = compact ? JSON.stringify(data) : JSON.stringify(data, null, 2);
+    return Buffer.from(str, 'utf-8');
   },
 };
 

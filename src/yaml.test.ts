@@ -107,8 +107,9 @@ describe('createZodYAML', () => {
       );
 
       expect(mockFsPromises.writeFile).toHaveBeenCalledTimes(1);
-      const writtenContent = mockFsPromises.writeFile.mock
-        .calls[0]?.[1] as string;
+      const writtenContent = (
+        mockFsPromises.writeFile.mock.calls[0]?.[1] as Buffer
+      ).toString('utf-8');
 
       expect(writtenContent).toContain('\n');
       expect(writtenContent).toContain('name:');

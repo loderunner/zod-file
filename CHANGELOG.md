@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/loderunner/zod-file/compare/0.1.0...0.1.1) (2025-12-09)
+
+
+### Documentation
+
+* fix table of contents ([ac1780e](https://github.com/loderunner/zod-file/commit/ac1780e03aa701dfbb4cd728529c2eec777c26f9))
+
 ## [0.1.0](https://github.com/loderunner/zod-file/compare/0.0.1...0.1.0) (2025-12-09)
 
 

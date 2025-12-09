@@ -11,18 +11,6 @@ A type-safe file persistence library with [Zod](https://zod.dev) validation and
 schema migrations for Node.js. Supports JSON out of the box, and YAML and TOML
 with optional dependencies.
 
-- **Type-safe persistence** – Load and save files with full TypeScript type
-  inference
-- **Multiple formats** – JSON built-in, YAML with optional `js-yaml` dependency,
-  TOML with optional `smol-toml` dependency
-- **Zod validation** – Validate data against Zod schemas on every load
-- **Schema migrations** – Migrate data between versions with a simple,
-  sequential migration chain
-- **Default values** – Gracefully handle missing or invalid files with
-  configurable defaults
-- **Codec support** – Works with Zod's `encodeAsync` for custom serialization
-  transforms
-
 - [Installation](#installation)
   - [YAML Support (Optional)](#yaml-support-optional)
   - [TOML Support (Optional)](#toml-support-optional)
